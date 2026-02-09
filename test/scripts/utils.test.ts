@@ -19,6 +19,8 @@ test("rewriteRelativeMdLinks", () => {
   - [absolute](/wow/)
   - [no trailing slash](../test)
   - [external](https://p5js.org/)
+  - [List of screen readers](https://en.wikipedia.org/wiki/List_of_screen_readers)
+  - [Access - github](https://github.com/processing/p5.js/blob/main/contributor_docs/access.md)
   `),
   ).toEqual(`
   # Title
@@ -36,5 +38,7 @@ test("rewriteRelativeMdLinks", () => {
   - [absolute](/wow/)
   - [no trailing slash](../test/)
   - [external](https://p5js.org/)
-  `);
+  - [List of screen readers](https://en.wikipedia.org/wiki/List_of_screen_readers)
+  - [Access - github](https://github.com/processing/p5.js/blob/main/contributor_docs/access.md)
+    `);
 });

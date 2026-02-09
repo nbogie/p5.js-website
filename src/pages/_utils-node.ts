@@ -67,8 +67,13 @@ export const rewriteRelativeLink = (url: string): string => {
     }
 
     // Relative links to md files should be turned into pages
+    //doc.md         --> doc
     if (updatedUrl.endsWith('.md')) {
       updatedUrl = updatedUrl.replace(/\.md$/, '');
+    }
+    //doc.md#section --> doc#section
+    if (updatedUrl.includes('.md#')) {
+      updatedUrl = updatedUrl.replace(/\.md#/, '#');
     }
   }
 

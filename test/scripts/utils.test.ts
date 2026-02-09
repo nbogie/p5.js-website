@@ -15,6 +15,7 @@ test("rewriteRelativeMdLinks", () => {
   - See [Access](./access.md).
   - [Other](./folder/document.md)
   - [Other](folder/document.md)
+  - [section](folder/document.md/#section)
   - [lol](./some-where-else/wow/)
   - [absolute](/wow/)
   - [no trailing slash](../test)
@@ -34,6 +35,7 @@ test("rewriteRelativeMdLinks", () => {
   - See [Access](../access/).
   - [Other](../folder/document/)
   - [Other](../folder/document/)
+  - [section](../folder/document/#section)
   - [lol](../some-where-else/wow/)
   - [absolute](/wow/)
   - [no trailing slash](../test/)

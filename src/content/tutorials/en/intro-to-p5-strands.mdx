@@ -103,26 +103,26 @@ let firstShader;
 // which determines how to modify a basic shader.
 
 function firstShaderCallback() {
-  finalColor.begin();
-  
-  // Yellow in RGBA (0-1 scale)
-  const myColor = [1, 1, 0, 1];
-  finalColor.set(myColor);
-  
-  finalColor.end();
+    finalColor.begin();
+    
+    // Yellow in RGBA (0-1 scale)
+    const myColor = [1, 1, 0, 1];
+    finalColor.set(myColor);
+    
+    finalColor.end();
 } 
 
 async function setup() {
-  createCanvas(200, 200, WEBGL);
-  pixelDensity(1);
-  // p5.strands are made using a build*Shader function
-  firstShader = buildColorShader(firstShaderCallback);
+    createCanvas(200, 200, WEBGL);
+    pixelDensity(1);
+    // p5.strands are made using a build*Shader function
+    firstShader = buildColorShader(firstShaderCallback);
 }
 
 function draw() {
-  background(0);
-  shader(firstShader);
-  sphere(80);
+    background(0);
+    shader(firstShader);
+    sphere(80);
 }
 `}/>
 

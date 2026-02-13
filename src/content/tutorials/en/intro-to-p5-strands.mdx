@@ -253,19 +253,8 @@ The `rand()` helper function uses three GLSL functions ported to p5.strands:
 While these functions have their conventional mathematical meanings, here they're combined to generate pseudorandom values based on the instance ID.
 
 #### Adding movement to the particles
-For animating the particles, we will introduce the concept of uniform variables. 
 
-Uniforms are values passed from JavaScript to your shader. Think of them like global variables. When you change their values, all instances of the shader will see the same value immediately, without having to refresh the sketch. This makes uniforms ideal for interactive parts of your shader. 
-
-```js
-const time = uniformFloat(() => millis());
-```
-
-In p5.strands, we declare uniforms with `uniformFloat`, `uniformVector3` and so on. They should be declared inside of the callback, but not inside one of the strands itself. 
-
-Optionally, we can provide a default value for the uniform. If we set the default value as a function, it will be run every frame and the uniform value set. Alternatively, it is possible to set uniforms in the usual way for shaders in p5.js, by calling `myShader.setUniform('time', millis())`. 
-
-For our case, let's set a callback which does the same thing, for our uniform variable `time`.
+Strands provides a function, `millis()`, that returns the number of milliseconds since a sketch started running.  It will give the same value as the [normal p5.js millis() function](/reference/p5/millis/). We can use it to change each particle's position over time.
 
 <EditableSketch code={`
 let instancingShader;
@@ -273,9 +262,6 @@ let instancingStrokeShader;
 let particleModel;
 
 function instancingCallback() {
-  // Add the uniform declaration
-  const time = uniformFloat(() => millis());
-
   // a pseudorandom function from:
   // https://stackoverflow.com/questions/4200224/random-noise-functions-for-glsl
   function rand(seed) {
@@ -286,7 +272,7 @@ function getAnimatedSpherePosition() {
   let id = instanceID();
   let theta = rand([id, 0.1234])  * TWO_PI;
   // change the particle's position over time:
-  let phi = rand([id, 3.321]) * PI + time / 10000;
+  let phi = rand([id, 3.321]) * PI + millis() / 10000;
 
   // Change the radius to create a more interesting shape:
   let r = 200 * sin(phi);
@@ -321,15 +307,15 @@ function draw() {
 }
 `} />
 
-By adding `time / 10000` to the phi angle and modifying the radius with `sin()`, we create animated particles that move around a pulsing, stretched sphere. Play around and see what other shapes you can create.
+By adding `millis() / 10000` to the phi angle and modifying the radius with `sin()`, we create animated particles that move around a pulsing, stretched sphere. Play around and see what other shapes you can create.
 
 <Callout title='Experiment!'>
 Try replacing `sin()` with `tan()`, `acosh()`, or combinations of functions. Small changes in shader code often create dramatically different visual effects, so experimentation goes a long way.
 </ Callout>
 
-#### p5.js variables available as uniforms
+#### standard p5.js variables available
 
-Some of the well-known p5.js global variables are made available to your shader as uniforms when you use p5.strands.
+Some of the well-known p5.js global variables are made available to your shader when you use p5.strands.
 
 Within a strands callback function, you can use any of these directly:
 
@@ -353,7 +339,7 @@ Within a strands callback function, you can use any of these directly:
 [winMouseX](/reference/p5/winMouseX),
 [winMouseY](/reference/p5/winMouseY).
 
-These are all floats (numbers) except `mouseIsPressed`, which is a boolean.
+These are all numbers except `mouseIsPressed`, which is a boolean.
 
 ### Fresnel effect
 If you've ever seen a material in a 3D render which appears to glow at the edges, or noticed how the light reflections appear to change on virtual water as you move your viewpoint, you were seeing the Fresnel effect. This effect changes how materials look when viewed at an angle.
@@ -426,9 +412,9 @@ Notice the returned value above: `[col, 1]`. This is one of the ways in which ve
 let fresnelShader
 
 function fresnelCallback() {
-  const fresnelPower = uniformFloat(2);
-  const fresnelBias = uniformFloat(-0.1);
-  const fresnelScale = uniformFloat(4);
+  const fresnelPower = 2;
+  const fresnelBias = -0.1;
+  const fresnelScale = 4;
 
   getCameraInputs((inputs) => {
     let n = normalize(inputs.normal);
@@ -458,17 +444,24 @@ function draw() {
 
 
 <Callout title="Tip">
-Try sending `const mousePos = uniformVector2(() => [mouseX, mouseY])` to this shader, and using those values for an interactive, color changing effect instead of the hardcoded pink.
+Try using `mouseX` and `mouseY` for an interactive, color changing effect instead of the hardcoded pink.  You will probably want to divide them down by `width` and `height` to get values in a 0 to 1 range.
 </ Callout>
 
 #### Fine-tuning
 
-The uniforms in effect give you some control over the end result.
+These variables give you some control over the end result.
 - `fresnelPower`: Higher values create a sharper transition from center to edge
 - `fresnelBias`: Shifts the center of the effect
 - `fresnelScale`: Amplifies the strength of the effect overall
 
-Uniforms can be changed without reloading the sketch if you use `setUniform()` or set the default value to a function which returns the desired value. For this demo, we'll just hard code some values.
+
+<Callout title="Tip">
+Instead of leaving these fresnel variables hard-coded, try having them change over time or based on mouse position by incorporating some mix of the following into their calculation:
+* `sin()`, `cos()`
+* `millis()`
+* `mouseX`, `mouseY`
+* `width`, `height`
+</Callout>
 
 ## Post-processing
 Filter shaders are built in much the same way as any other shader in p5.strands. The only difference is that we are only concerned with the fragment shader in filters, the one which decides the color of what's on the screen. They work by taking a snapshot of the sketch every frame, and sending through a fragment shader to manipulate the color. There are effects which are only possible through post-processing in this way. 
@@ -507,7 +500,7 @@ With that in mind, let's manipulate the number of texture coordinates, so that m
 let pixelateShader;
 
 function pixelateCallback() {
-  const pixelCountX = uniformFloat(() => 80);
+  const pixelCountX = 80;
 
   getColor((inputs, canvasContent) => {
     const aspectRatio = inputs.canvasSize.x / inputs.canvasSize.y;
@@ -630,7 +623,11 @@ function draw() {
 }
 `} />
 
-In the variable `brightPass`, we have two magic numbers which could be uniforms instead, or feel free to adjust the values to find something which looks good. The `0.2` inside of `max` acts as *a kind* of threshold. Areas which are full black in the blurred image will not be affected by bloom, as they will ultimately be multiplying by 0. The `8` multiplies the overall strength of the effect.
+In the calculation of the variable `intensity`, we have two magic numbers:
+```js
+const intensity = max(original, 0.2) * 8;
+```
+The `0.2` inside of `max` acts as *a kind* of threshold. Areas which are full black in the blurred image will not be affected by bloom, as they will ultimately be multiplying by 0. The `8` multiplies the overall strength of the effect.  Feel free to adjust them to find something which looks good, or control them with mouse and time inputs!
 
 We only select the `.rgb` components of the bloom, as otherwise our alpha will be higher than 1 which gives unexpected results. Since we have selected only some components, we have an opportunity to try 'swizzling'. Swizzling is a feature of GLSL and other shader languages which lets us select whichever components of a vector to construct a new one.
 
@@ -673,9 +670,9 @@ let fresnelShader;
 let bloomShader;
 
 function fresnelShaderCallback() {
-  const fresnelPower = uniformFloat(2);
-  const fresnelBias = uniformFloat(-0.1);
-  const fresnelScale = uniformFloat(2);
+  const fresnelPower = 2;
+  const fresnelBias = -0.1;
+  const fresnelScale = 2;
 
   getCameraInputs((inputs) => {
     let n = normalize(inputs.normal);
@@ -689,8 +686,7 @@ function fresnelShaderCallback() {
 }
 
 function starShaderCallback() {
-  const time = uniformFloat(() => millis());
-  const skyRadius = uniformFloat(250);
+  const skyRadius = 250;
   
   function rand2(st) {
     return fract(sin(dot(st, [12.9898, 78.233])) * 43758.5453123);
@@ -698,8 +694,8 @@ function starShaderCallback() {
 
   function semiSphere() {
     let id = instanceID();
-    let theta = rand2([id, 0.1234])  * TWO_PI + time / 100000;
-    let phi = rand2([id, 3.321]) * PI + time / 50000;
+    let theta = rand2([id, 0.1234])  * TWO_PI + millis() / 100000;
+    let phi = rand2([id, 3.321]) * PI + millis() / 50000;
   
     let r = skyRadius;
     r *= sin(phi);
@@ -715,14 +711,14 @@ function starShaderCallback() {
   });
 
   getObjectInputs((inputs) => {
-    let size = 1 + 0.5 * sin(time * 0.002 + instanceID());
+    let size = 1 + 0.5 * sin(millis() * 0.002 + instanceID());
     inputs.position *= size;
     return inputs;
   });
 }
 
 function pixelateShaderCallback() {
-  const pixelCountX = uniformFloat(()=> 280);
+  const pixelCountX = 280;
 
   getColor((inputs, canvasContent) => {
     const aspectRatio = inputs.canvasSize.x / inputs.canvasSize.y;

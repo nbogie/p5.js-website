@@ -10,11 +10,11 @@ relatedContent:
     - en/p5/p5shader
     - en/p5shader/modify
     - en/p5shader/inspecthooks
-    - en/p5/basecolorshader
-    - en/p5/basematerialshader
-    - en/p5/basestrokeshader
-    - en/p5/basenormalshader
-    - en/p5/basefiltershader
+    - en/p5/buildcolorshader
+    - en/p5/buildmaterialshader
+    - en/p5/buildstrokeshader
+    - en/p5/buildnormalshader
+    - en/p5/buildfiltershader
 authors:
   - Luke Plowden
 ---
@@ -51,22 +51,22 @@ A vertex shader and a fragment shader are both required to render anything in We
 let myShader;
 
 function lightingSetup() {
-  ambientLight(80, 80, 140);
-  const pointX = cos(millis() / 750) * 100;
-  const pointZ = sin(millis() / 750) * 100;
-  pointLight(80, 80, 255, pointX, -60, pointZ);
+    ambientLight(80, 80, 140);
+    const pointX = cos(millis() / 750) * 100;
+    const pointZ = sin(millis() / 750) * 100;
+    pointLight(80, 80, 255, pointX, -60, pointZ);
 }
 
 function setup() {
-  createCanvas(200, 200, WEBGL);
-  pixelDensity(1);
+    createCanvas(200, 200, WEBGL);
+    pixelDensity(1);
 }
 
 function draw() {
-  background(100);
-  // shader(baseColorShader());
-  lightingSetup();
-  sphere(80);
+    background(100);
+    // shader(baseColorShader());
+    lightingSetup();
+    sphere(80);
 }
 `} />
 
@@ -104,11 +104,11 @@ let firstShader;
 
 function firstShaderCallback() {
     finalColor.begin();
-    
+
     // Yellow in RGBA (0-1 scale)
     const myColor = [1, 1, 0, 1];
     finalColor.set(myColor);
-    
+
     finalColor.end();
 } 
 
@@ -171,29 +171,29 @@ let instancingStrokeShader;
 let particleModel;
 
 function instancingCallback() {
-  getWorldInputs((inputs) => {
-  // Offset each instance by its ID
-  inputs.position.x += instanceID() * 20;
-    // Move the particles left on the screen
-    inputs.position.x -= 150;
-    return inputs;
-  });
+    getWorldInputs((inputs) => {
+    // Offset each instance by its ID
+    inputs.position.x += instanceID() * 20;
+        // Move the particles left on the screen
+        inputs.position.x -= 150;
+        return inputs;
+    });
 }
 
 async function setup() {
-  createCanvas(300, 300, WEBGL);
-  pixelDensity(1);
-  particleModel = buildGeometry(() => sphere(10, 10, 2));
-  instancingShader = baseColorShader().modify(instancingCallback);
-  instancingStrokeShader = baseStrokeShader().modify(instancingCallback);
+    createCanvas(300, 300, WEBGL);
+    pixelDensity(1);
+    particleModel = buildGeometry(() => sphere(10, 10, 2));
+    instancingShader = baseColorShader().modify(instancingCallback);
+    instancingStrokeShader = baseStrokeShader().modify(instancingCallback);
 }
 
 function draw() {
-  background(0);
-  orbitControl();
-  shader(instancingShader)
-  strokeShader(instancingStrokeShader)
-  model(particleModel, 16);
+    background(0);
+    orbitControl();
+    shader(instancingShader)
+    strokeShader(instancingStrokeShader)
+    model(particleModel, 16);
 }
 `} />
 
@@ -211,45 +211,45 @@ let instancingStrokeShader;
 let particleModel;
 
 function instancingCallback() {
-  // a pseudorandom function from:
-  // https://stackoverflow.com/questions/4200224/random-noise-functions-for-glsl
-  function rand(seed) {
-  return fract(sin(dot(seed, [12.9898, 78.233])) * 43758.5453123);
+    // a pseudorandom function from:
+    // https://stackoverflow.com/questions/4200224/random-noise-functions-for-glsl
+    function rand(seed) {
+        return fract(sin(dot(seed, [12.9898, 78.233])) * 43758.5453123);
 }
 
 function randomPositionOnSphere() {
-  let id = instanceID();
-  let theta = rand([id, 0.1234])  * TWO_PI;
-  let phi = rand([id, 3.321]) * PI;
+    let id = instanceID();
+    let theta = rand([id, 0.1234])  * TWO_PI;
+    let phi = rand([id, 3.321]) * PI;
 
-  let r = 180;
-  let x = r * sin(phi) * cos(theta);
-  let y = r * cos(phi);
-  let z = r * sin(phi) * sin(theta);
-  return [x, y, z];
+    let r = 180;
+    let x = r * sin(phi) * cos(theta);
+    let y = r * cos(phi);
+    let z = r * sin(phi) * sin(theta);
+    return [x, y, z];
 }
 
 getWorldInputs((inputs) => {
-  inputs.position += randomPositionOnSphere();
-  return inputs;
+   inputs.position += randomPositionOnSphere();
+   return inputs;
   });
 }
 
 async function setup() {
-  createCanvas(400, 400, WEBGL);
-  pixelDensity(1);
-  particleModel = buildGeometry(() => sphere(10, 4, 2));
-  instancingShader = baseColorShader().modify(instancingCallback);
-  instancingStrokeShader = baseStrokeShader().modify(instancingCallback);
+    createCanvas(400, 400, WEBGL);
+    pixelDensity(1);
+    particleModel = buildGeometry(() => sphere(10, 4, 2));
+    instancingShader = baseColorShader().modify(instancingCallback);
+    instancingStrokeShader = baseStrokeShader().modify(instancingCallback);
 }
 
 function draw() {
-  background(0);
-  orbitControl();
-  shader(instancingShader)
-  fill(255, 100, 150)
-  strokeShader(instancingStrokeShader)
-  model(particleModel, 1000);
+    background(0);
+    orbitControl();
+    shader(instancingShader)
+    fill(255, 100, 150)
+    strokeShader(instancingStrokeShader)
+    model(particleModel, 1000);
 }
 `} />
 
@@ -280,51 +280,51 @@ let instancingStrokeShader;
 let particleModel;
 
 function instancingCallback() {
-  // Add the uniform declaration
-  const time = uniformFloat(() => millis());
+    // Add the uniform declaration
+    const time = uniformFloat(() => millis());
 
-  // a pseudorandom function from:
-  // https://stackoverflow.com/questions/4200224/random-noise-functions-for-glsl
-  function rand(seed) {
-    return fract(sin(dot(seed, [12.9898, 78.233])) * 43758.5453123);
+    // a pseudorandom function from:
+    // https://stackoverflow.com/questions/4200224/random-noise-functions-for-glsl
+    function rand(seed) {
+        return fract(sin(dot(seed, [12.9898, 78.233])) * 43758.5453123);
   }
 
 function getAnimatedSpherePosition() {
-  let id = instanceID();
-  let theta = rand([id, 0.1234])  * TWO_PI;
-  // change the particle's position over time:
-  let phi = rand([id, 3.321]) * PI + time / 10000;
+    let id = instanceID();
+    let theta = rand([id, 0.1234])  * TWO_PI;
+    // change the particle's position over time:
+    let phi = rand([id, 3.321]) * PI + time / 10000;
 
-  // Change the radius to create a more interesting shape:
-  let r = 200 * sin(phi);
-  let x = r * sin(phi) * cos(theta);
-  // Stretch the y dimensions a little
-  let y = r * 1.5 * cos(phi);
-  let z = r * sin(phi) * sin(theta);
-  return [x, y, z];
+    // Change the radius to create a more interesting shape:
+    let r = 200 * sin(phi);
+    let x = r * sin(phi) * cos(theta);
+    // Stretch the y dimensions a little
+    let y = r * 1.5 * cos(phi);
+    let z = r * sin(phi) * sin(theta);
+    return [x, y, z];
 }
 
 getWorldInputs((inputs) => {
-  inputs.position += getAnimatedSpherePosition();
-  return inputs;
+    inputs.position += getAnimatedSpherePosition();
+    return inputs;
 });
 }
 
 async function setup() {
-  createCanvas(400, 400, WEBGL);
-  pixelDensity(1);
-  particleModel = buildGeometry(() => sphere(10, 4, 2));
-  instancingShader = baseColorShader().modify(instancingCallback);
-  instancingStrokeShader = baseStrokeShader().modify(instancingCallback);
+    createCanvas(400, 400, WEBGL);
+    pixelDensity(1);
+    particleModel = buildGeometry(() => sphere(10, 4, 2));
+    instancingShader = baseColorShader().modify(instancingCallback);
+    instancingStrokeShader = baseStrokeShader().modify(instancingCallback);
 }
 
 function draw() {
-  background(0);
-  orbitControl();
-  shader(instancingShader)
-  fill(255, 100, 150)
-  strokeShader(instancingStrokeShader)
-  model(particleModel, 1000);
+    background(0);
+    orbitControl();
+    shader(instancingShader)
+    fill(255, 100, 150)
+    strokeShader(instancingStrokeShader)
+    model(particleModel, 1000);
 }
 `} />
 
@@ -433,33 +433,33 @@ Notice the returned value above: `[col, 1]`. This is one of the ways in which ve
 let fresnelShader
 
 function fresnelCallback() {
-  const fresnelPower = uniformFloat(2);
-  const fresnelBias = uniformFloat(-0.1);
-  const fresnelScale = uniformFloat(4);
-
-  getCameraInputs((inputs) => {
-    let n = normalize(inputs.normal);
-    let v = normalize(-inputs.position);
-    let base = 1.0 - dot(n, v);
-    let fresnel = fresnelScale * pow(base, fresnelPower) + fresnelBias;
-    let col = mix([0, 0, 0], [1, .5, .7], fresnel);
-    inputs.color = [col, 1];
-    return inputs;
-  });
+    const fresnelPower = uniformFloat(2);
+    const fresnelBias = uniformFloat(-0.1);
+    const fresnelScale = uniformFloat(4);
+  
+    getCameraInputs((inputs) => {
+        let n = normalize(inputs.normal);
+        let v = normalize(-inputs.position);
+        let base = 1.0 - dot(n, v);
+        let fresnel = fresnelScale * pow(base, fresnelPower) + fresnelBias;
+        let col = mix([0, 0, 0], [1, .5, .7], fresnel);
+        inputs.color = [col, 1];
+        return inputs;
+    });
 }
 
 async function setup() {
-  createCanvas(400, 400, WEBGL);
-  pixelDensity(1);
-  fresnelShader = baseColorShader().modify(fresnelCallback);
+    createCanvas(400, 400, WEBGL);
+    pixelDensity(1);
+    fresnelShader = baseColorShader().modify(fresnelCallback);
 }
 
 function draw() {
-  background(0);
-  noStroke();
-  orbitControl();
-  shader(fresnelShader)
-  sphere(80);
+    background(0);
+    noStroke();
+    orbitControl();
+    shader(fresnelShader)
+    sphere(80);
 } 
 `} />
 
@@ -489,20 +489,20 @@ We can achieve a pixelation effect by sampling the color of the scene at fewer p
 let pixelateShader;
 
 function pixelateCallback() {
-  getColor((inputs, canvasContent) => {
-    let coord = inputs.texCoord;
-    return [coord, 0, 1];
+    getColor((inputs, canvasContent) => {
+        let coord = inputs.texCoord;
+        return [coord, 0, 1];
   });
 }
 
 async function setup() {
-  createCanvas(200, 200);
-  pixelDensity(1);
-  pixelateShader = baseFilterShader().modify(pixelateCallback)
+    createCanvas(200, 200);
+    pixelDensity(1);
+    pixelateShader = baseFilterShader().modify(pixelateCallback)
 }
 
 function draw() {
-  filter(pixelateShader);
+    filter(pixelateShader);
 }
 `}/>
 
@@ -514,32 +514,32 @@ With that in mind, let's manipulate the number of texture coordinates, so that m
 let pixelateShader;
 
 function pixelateCallback() {
-  const pixelCountX = uniformFloat(() => 80);
+    const pixelCountX = uniformFloat(() => 80);
+  
+    getColor((inputs, canvasContent) => {
+        const aspectRatio = inputs.canvasSize.x / inputs.canvasSize.y;
+        const pixelSize = [pixelCountX, pixelCountX / aspectRatio];
 
-  getColor((inputs, canvasContent) => {
-    const aspectRatio = inputs.canvasSize.x / inputs.canvasSize.y;
-    const pixelSize = [pixelCountX, pixelCountX / aspectRatio];
+        // Sample the canvasContent texture with the modified texCoord
+        const coord = inputs.texCoord;
+        const modifiedCoord = floor(coord * pixelSize) / pixelSize;
 
-    // Sample the canvasContent texture with the modified texCoord
-    const coord = inputs.texCoord;
-    const modifiedCoord = floor(coord * pixelSize) / pixelSize;
-
-    const col = getTexture(canvasContent, modifiedCoord);
-    return col;
-  });
+        const col = getTexture(canvasContent, modifiedCoord);
+        return col;
+    });
 }
 
 async function setup() {
-  createCanvas(200, 200, WEBGL);
-  pixelDensity(1);
-  pixelateShader = baseFilterShader().modify(pixelateCallback)
+    createCanvas(200, 200, WEBGL);
+    pixelDensity(1);
+    pixelateShader = baseFilterShader().modify(pixelateCallback)
 }
 
 function draw() {
-  background(0);
-  rotateY(millis()/2000)
-  sphere(90);
-  filter(pixelateShader);
+    background(0);
+    rotateY(millis()/2000)
+    sphere(90);
+    filter(pixelateShader);
 }
 `}/>
 This is the entire code for our pixelating shader. Put this filter at the bottom of our draw function to pixelate the entire scene by calling `filter(pixelShader)`. We also need to use `baseFilterShader().modify(pixelateCallback)` to construct the shader as before.
@@ -555,21 +555,21 @@ We could write the shader to produce the blurred image, but p5.js already has pr
 let originalImage;
 
 async function setup() {
-  // previous code...
-  originalImage = createFramebuffer();
+    // previous code...
+    originalImage = createFramebuffer();
 }
 
 function draw() {
-  // Draw the previous code to a framebuffer, so that we can store it before our  blur is applied.
-  originalImage.begin();
-  // previous code...
-  originalImage.end(); 
-
-  imageMode(CENTER);
-  image(originalImage, 0, 0);
-
-  // changing this value affects the spread of the bloom
-  filter(BLUR, 15);
+    // Draw the previous code to a framebuffer, so that we can store it before our  blur is applied.
+    originalImage.begin();
+    // previous code...
+    originalImage.end(); 
+  
+    imageMode(CENTER);
+    image(originalImage, 0, 0);
+  
+    // changing this value affects the spread of the bloom
+    filter(BLUR, 15);
 }
 ```
 
@@ -577,18 +577,18 @@ function draw() {
 
 ```js
 function bloomCallback() {
-  const ogImage = uniformTexture(() => originalImage)
-
-  getColor((input, canvasContent) => {
-    // Get our textures converted into vector values.
-    const blurred = getTexture(canvasContent, input.texCoord);
-    const original = getTexture(ogImage, input.texCoord);
-
-    const intensity = max(original, 0.3) * 1.5;
-    // Overlay the blurred image
-    const bloom = original + blurred * intensity;
-    return [bloom.rgb, 1]
-  });
+    const ogImage = uniformTexture(() => originalImage)
+  
+    getColor((input, canvasContent) => {
+        // Get our textures converted into vector values.
+        const blurred = getTexture(canvasContent, input.texCoord);
+        const original = getTexture(ogImage, input.texCoord);
+    
+        const intensity = max(original, 0.3) * 1.5;
+        // Overlay the blurred image
+        const bloom = original + blurred * intensity;
+        return [bloom.rgb, 1]
+    });
 }
 ```
 
@@ -597,43 +597,43 @@ let bloomShader;
 let originalImage;
 
 function bloomCallback() {
-  const preBlur = uniformTexture(() => originalImage);
-
-  getColor((input, canvasContent) => {
-    const blurred = getTexture(canvasContent, input.texCoord);
-    const original = getTexture(preBlur, input.texCoord);
-
-    const intensity = max(original, 0.2) * 8;
+    const preBlur = uniformTexture(() => originalImage);
+  
+    getColor((input, canvasContent) => {
+        const blurred = getTexture(canvasContent, input.texCoord);
+        const original = getTexture(preBlur, input.texCoord);
     
-    const bloom = original + blurred * intensity;
-    return [bloom.rgb, 1];
-  });
+        const intensity = max(original, 0.2) * 8;
+        
+        const bloom = original + blurred * intensity;
+        return [bloom.rgb, 1];
+    });
 }
 
 
 async function setup() {
-  createCanvas(200, 200, WEBGL);
-  pixelDensity(1);
-  originalImage = createFramebuffer();
-  bloomShader = baseFilterShader().modify(bloomCallback);
+    createCanvas(200, 200, WEBGL);
+    pixelDensity(1);
+    originalImage = createFramebuffer();
+    bloomShader = baseFilterShader().modify(bloomCallback);
 }
 
 function draw() {
-  // Draw the previous code to a framebuffer
-  // so that we can store it before the blur
-  originalImage.begin();
-  background(0);
-  rotateY(millis()/1000);
-  fill(40, 120, 255);
-  box(80);
-  originalImage.end();
+    // Draw the previous code to a framebuffer
+    // so that we can store it before the blur
+    originalImage.begin();
+    background(0);
+    rotateY(millis()/1000);
+    fill(40, 120, 255);
+    box(80);
+    originalImage.end();
 
-  imageMode(CENTER);
-  image(originalImage, 0, 0);
+    imageMode(CENTER);
+    image(originalImage, 0, 0);
 
-  // changing this value affects the spread of the bloom
-  filter(BLUR, 20);
-  filter(bloomShader);
+    // changing this value affects the spread of the bloom
+    filter(BLUR, 20);
+    filter(bloomShader);
 }
 `} />
 
@@ -680,124 +680,124 @@ let fresnelShader;
 let bloomShader;
 
 function fresnelShaderCallback() {
-  const fresnelPower = uniformFloat(2);
-  const fresnelBias = uniformFloat(-0.1);
-  const fresnelScale = uniformFloat(2);
-
-  getCameraInputs((inputs) => {
-    let n = normalize(inputs.normal);
-    let v = normalize(-inputs.position);
-    let base = 1.0 - dot(n, v);
-    let fresnel = fresnelScale * pow(base, fresnelPower) + fresnelBias;
-    let col = mix([0, 0, 0], [1, .5, .7], fresnel);
-    inputs.color = [col, 1];
-    return inputs;
-  });
+    const fresnelPower = uniformFloat(2);
+    const fresnelBias = uniformFloat(-0.1);
+    const fresnelScale = uniformFloat(2);
+  
+    getCameraInputs((inputs) => {
+        let n = normalize(inputs.normal);
+        let v = normalize(-inputs.position);
+        let base = 1.0 - dot(n, v);
+        let fresnel = fresnelScale * pow(base, fresnelPower) + fresnelBias;
+        let col = mix([0, 0, 0], [1, .5, .7], fresnel);
+        inputs.color = [col, 1];
+        return inputs;
+    });
 }
 
 function starShaderCallback() {
-  const time = uniformFloat(() => millis());
-  const skyRadius = uniformFloat(250);
+    const time = uniformFloat(() => millis());
+    const skyRadius = uniformFloat(250);
+    
+    function rand2(st) {
+        return fract(sin(dot(st, [12.9898, 78.233])) * 43758.5453123);
+    }
   
-  function rand2(st) {
-    return fract(sin(dot(st, [12.9898, 78.233])) * 43758.5453123);
-  }
+    function semiSphere() {
+        let id = instanceID();
+        let theta = rand2([id, 0.1234])  * TWO_PI + time / 100000;
+        let phi = rand2([id, 3.321]) * PI + time / 50000;
 
-  function semiSphere() {
-    let id = instanceID();
-    let theta = rand2([id, 0.1234])  * TWO_PI + time / 100000;
-    let phi = rand2([id, 3.321]) * PI + time / 50000;
+        let r = skyRadius;
+        r *= sin(phi);
+        let x = r * sin(phi) * cos(theta);
+        let y = r * 1.5 * cos(phi);
+        let z = r * sin(phi) * sin(theta);
+        return [x, y, z];
+    }
   
-    let r = skyRadius;
-    r *= sin(phi);
-    let x = r * sin(phi) * cos(theta);
-    let y = r * 1.5 * cos(phi);
-    let z = r * sin(phi) * sin(theta);
-    return [x, y, z];
-  }
-
-  getWorldInputs((inputs) => {
-    inputs.position += semiSphere();
-    return inputs;
-  });
-
-  getObjectInputs((inputs) => {
-    let size = 1 + 0.5 * sin(time * 0.002 + instanceID());
-    inputs.position *= size;
-    return inputs;
-  });
+    getWorldInputs((inputs) => {
+        inputs.position += semiSphere();
+        return inputs;
+    });
+  
+    getObjectInputs((inputs) => {
+        let size = 1 + 0.5 * sin(time * 0.002 + instanceID());
+        inputs.position *= size;
+        return inputs;
+    });
 }
 
 function pixelateShaderCallback() {
-  const pixelCountX = uniformFloat(()=> 280);
+    const pixelCountX = uniformFloat(()=> 280);
 
-  getColor((inputs, canvasContent) => {
-    const aspectRatio = inputs.canvasSize.x / inputs.canvasSize.y;
-    const pixelSize = [pixelCountX, pixelCountX / aspectRatio];
+    getColor((inputs, canvasContent) => {
+        const aspectRatio = inputs.canvasSize.x / inputs.canvasSize.y;
+        const pixelSize = [pixelCountX, pixelCountX / aspectRatio];
 
-    let coord = inputs.texCoord;
-    coord = floor(coord * pixelSize) / pixelSize;
+        let coord = inputs.texCoord;
+        coord = floor(coord * pixelSize) / pixelSize;
 
-    let col = getTexture(canvasContent, coord);
-    return col//[coord, 0, 1];
-  });
+        let col = getTexture(canvasContent, coord);
+        return col//[coord, 0, 1];
+    });
 }
 
 function bloomShaderCallback() {
-  const preBlur = uniformTexture(() => originalImage);
+    const preBlur = uniformTexture(() => originalImage);
 
-  getColor((input, canvasContent) => {
-    const blurredCol = getTexture(canvasContent, input.texCoord);
-    const originalCol = getTexture(preBlur, input.texCoord);
+    getColor((input, canvasContent) => {
+        const blurredCol = getTexture(canvasContent, input.texCoord);
+        const originalCol = getTexture(preBlur, input.texCoord);
 
-    const intensity = max(originalCol, 0.1) * 12.2;
-    
-    const bloom = originalCol + blurredCol * intensity;
-    return [bloom.rgb, 1];
-  });
+        const intensity = max(originalCol, 0.1) * 12.2;
+
+        const bloom = originalCol + blurredCol * intensity;
+        return [bloom.rgb, 1];
+    });
 }
 
 async function setup(){
-  createCanvas(800, 600, WEBGL);
-  pixelDensity(1);
-  stars = buildGeometry(() => sphere(8, 4, 2))
-  originalImage = createFramebuffer();
-
-  starShader = baseMaterialShader().modify(starShaderCallback); 
-  starStrokeShader = baseStrokeShader().modify(starShaderCallback)
-  fresnelShader = baseColorShader().modify(fresnelShaderCallback);
-  bloomShader = baseFilterShader().modify(bloomShaderCallback);
-  pixelateShader = baseFilterShader().modify(pixelateShaderCallback);
+    createCanvas(800, 600, WEBGL);
+    pixelDensity(1);
+    stars = buildGeometry(() => sphere(8, 4, 2))
+    originalImage = createFramebuffer();
+  
+    starShader = baseMaterialShader().modify(starShaderCallback); 
+    starStrokeShader = baseStrokeShader().modify(starShaderCallback)
+    fresnelShader = baseColorShader().modify(fresnelShaderCallback);
+    bloomShader = baseFilterShader().modify(bloomShaderCallback);
+    pixelateShader = baseFilterShader().modify(pixelateShaderCallback);
 }
 
 function draw(){
-  originalImage.begin();
-  background(0);
-  orbitControl();
-
-  push()
-  strokeWeight(2)
-  stroke(255,0,0)
-  rotateX(PI/2 + millis() * 0.0005);
-  fill(255,100, 150)
-  strokeShader(starStrokeShader)
-  shader(starShader);
-  model(stars, 1000);
-  pop()
-
-  push()
-  shader(fresnelShader)
-  noStroke()
-  sphere(90);
-  filter(pixelateShader);
-  pop()
-
-  originalImage.end();
+    originalImage.begin();
+    background(0);
+    orbitControl();
   
-  imageMode(CENTER)
-  image(originalImage, 0, 0)
+    push()
+    strokeWeight(2)
+    stroke(255,0,0)
+    rotateX(PI/2 + millis() * 0.0005);
+    fill(255,100, 150)
+    strokeShader(starStrokeShader)
+    shader(starShader);
+    model(stars, 1000);
+    pop()
   
-  filter(BLUR, 15)
-  filter(bloomShader);
+    push()
+    shader(fresnelShader)
+    noStroke()
+    sphere(90);
+    filter(pixelateShader);
+    pop()
+  
+    originalImage.end();
+    
+    imageMode(CENTER)
+    image(originalImage, 0, 0)
+    
+    filter(BLUR, 15)
+    filter(bloomShader);
 }
 `} />

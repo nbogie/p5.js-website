@@ -48,26 +48,26 @@ Shaders are GPU programs written in specialized languages like GLSL for WebGL. T
 A vertex shader and a fragment shader are both required to render anything in WebGL mode. Fortunately, p5.js provides some default shaders that you can use, so you don't need to write your own. Consider this sketch:
 
 <EditableSketch code={`
-let myShader;
+  let myShader;
 
-function lightingSetup() {
+  function lightingSetup() {
     ambientLight(80, 80, 140);
     const pointX = cos(millis() / 750) * 100;
     const pointZ = sin(millis() / 750) * 100;
     pointLight(80, 80, 255, pointX, -60, pointZ);
-}
+  }
 
-function setup() {
+  function setup() {
     createCanvas(200, 200, WEBGL);
     pixelDensity(1);
-}
+  }
 
-function draw() {
+  function draw() {
     background(100);
     // shader(baseColorShader());
     lightingSetup();
     sphere(80);
-}
+  }
 `} />
 
 Even without explicitly setting it, a shader calculates the lighting and shading of the fill, and another does the stroke. Uncommenting `shader(baseColorShader())` produces a different result, where the blue tint of the lighting does not affect the visible color of the sphere.
@@ -97,12 +97,12 @@ To summarise, p5.strands is a JavaScript-based shading language which sits on to
 Let's build a minimal shader example to introduce p5.strands' key concepts. With p5.strands, you can modify sections (known as "strands") of ready-made shaders using JavaScript.
 
 <EditableSketch code={`
-let firstShader;
+  let firstShader;
+  
+  // Our callback function using p5.strands, 
+  // which determines how to modify a basic shader.
 
-// Our callback function using p5.strands, 
-// which determines how to modify a basic shader.
-
-function firstShaderCallback() {
+  function firstShaderCallback() {
     finalColor.begin();
 
     // Yellow in RGBA (0-1 scale)
@@ -110,20 +110,20 @@ function firstShaderCallback() {
     finalColor.set(myColor);
 
     finalColor.end();
-} 
+  } 
 
-async function setup() {
+  async function setup() {
     createCanvas(200, 200, WEBGL);
     pixelDensity(1);
     // p5.strands are made using a build*Shader function
     firstShader = buildColorShader(firstShaderCallback);
-}
+  }
 
-function draw() {
+  function draw() {
     background(0);
     shader(firstShader);
     sphere(80);
-}
+  }
 `}/>
 
 In this sketch, you should see a yellow sphere.
@@ -166,35 +166,35 @@ particleModel = buildGeometry(() => sphere(10, 2, 4));
 Let's start by offsetting instances along the x-axis using `baseColorShader()`:
 
 <EditableSketch code={`
-let instancingShader;
-let instancingStrokeShader;
-let particleModel;
+  let instancingShader;
+  let instancingStrokeShader;
+  let particleModel;
 
-function instancingCallback() {
+  function instancingCallback() {
     getWorldInputs((inputs) => {
     // Offset each instance by its ID
     inputs.position.x += instanceID() * 20;
-        // Move the particles left on the screen
-        inputs.position.x -= 150;
-        return inputs;
+      // Move the particles left on the screen
+      inputs.position.x -= 150;
+      return inputs;
     });
-}
+  }
 
-async function setup() {
+  async function setup() {
     createCanvas(300, 300, WEBGL);
     pixelDensity(1);
     particleModel = buildGeometry(() => sphere(10, 10, 2));
     instancingShader = baseColorShader().modify(instancingCallback);
     instancingStrokeShader = baseStrokeShader().modify(instancingCallback);
-}
+  }
 
-function draw() {
+  function draw() {
     background(0);
     orbitControl();
     shader(instancingShader)
     strokeShader(instancingStrokeShader)
     model(particleModel, 16);
-}
+  }
 `} />
 
 The getWorldInputs() callback receives an inputs struct containing data about the current vertex: `position`, `normal`, `texCoord`, and `color`. The "world" part indicates that this runs after JavaScript transformations like translate() or scale() have been applied.
@@ -206,51 +206,51 @@ Moving in world space is like moving relative to the entire scene, while object 
 Now let's distribute our particles in a more interesting pattern - placing them randomly on a sphere:
 
 <EditableSketch code={`
-let instancingShader;
-let instancingStrokeShader;
-let particleModel;
+  let instancingShader;
+  let instancingStrokeShader;
+  let particleModel;
 
-function instancingCallback() {
+  function instancingCallback() {
     // a pseudorandom function from:
     // https://stackoverflow.com/questions/4200224/random-noise-functions-for-glsl
     function rand(seed) {
-        return fract(sin(dot(seed, [12.9898, 78.233])) * 43758.5453123);
-}
+      return fract(sin(dot(seed, [12.9898, 78.233])) * 43758.5453123);
+    }
 
-function randomPositionOnSphere() {
-    let id = instanceID();
-    let theta = rand([id, 0.1234])  * TWO_PI;
-    let phi = rand([id, 3.321]) * PI;
+    function randomPositionOnSphere() {
+      let id = instanceID();
+      let theta = rand([id, 0.1234])  * TWO_PI;
+      let phi = rand([id, 3.321]) * PI;
+  
+      let r = 180;
+      let x = r * sin(phi) * cos(theta);
+      let y = r * cos(phi);
+      let z = r * sin(phi) * sin(theta);
+      return [x, y, z];
+    }
+  
+    getWorldInputs((inputs) => {
+      inputs.position += randomPositionOnSphere();
+      return inputs;
+    });
+  }
 
-    let r = 180;
-    let x = r * sin(phi) * cos(theta);
-    let y = r * cos(phi);
-    let z = r * sin(phi) * sin(theta);
-    return [x, y, z];
-}
-
-getWorldInputs((inputs) => {
-   inputs.position += randomPositionOnSphere();
-   return inputs;
-  });
-}
-
-async function setup() {
+  async function setup() {
     createCanvas(400, 400, WEBGL);
     pixelDensity(1);
     particleModel = buildGeometry(() => sphere(10, 4, 2));
     instancingShader = baseColorShader().modify(instancingCallback);
     instancingStrokeShader = baseStrokeShader().modify(instancingCallback);
-}
+  }
 
-function draw() {
+  function draw() {
     background(0);
     orbitControl();
     shader(instancingShader)
     fill(255, 100, 150)
     strokeShader(instancingStrokeShader)
     model(particleModel, 1000);
-}
+  }
 `} />
 
 The `rand()` helper function uses three GLSL functions ported to p5.strands:
@@ -275,57 +275,57 @@ Optionally, we can provide a default value for the uniform. If we set the defaul
 For our case, let's set a callback which does the same thing, for our uniform variable `time`.
 
 <EditableSketch code={`
-let instancingShader;
-let instancingStrokeShader;
-let particleModel;
+  let instancingShader;
+  let instancingStrokeShader;
+  let particleModel;
 
-function instancingCallback() {
+  function instancingCallback() {
     // Add the uniform declaration
     const time = uniformFloat(() => millis());
 
     // a pseudorandom function from:
     // https://stackoverflow.com/questions/4200224/random-noise-functions-for-glsl
     function rand(seed) {
-        return fract(sin(dot(seed, [12.9898, 78.233])) * 43758.5453123);
+      return fract(sin(dot(seed, [12.9898, 78.233])) * 43758.5453123);
+    }
+
+    function getAnimatedSpherePosition() {
+      let id = instanceID();
+      let theta = rand([id, 0.1234])  * TWO_PI;
+      // change the particle's position over time:
+      let phi = rand([id, 3.321]) * PI + time / 10000;
+  
+      // Change the radius to create a more interesting shape:
+      let r = 200 * sin(phi);
+      let x = r * sin(phi) * cos(theta);
+      // Stretch the y dimensions a little
+      let y = r * 1.5 * cos(phi);
+      let z = r * sin(phi) * sin(theta);
+      return [x, y, z];
+    }
+
+    getWorldInputs((inputs) => {
+      inputs.position += getAnimatedSpherePosition();
+      return inputs;
+    });
   }
 
-function getAnimatedSpherePosition() {
-    let id = instanceID();
-    let theta = rand([id, 0.1234])  * TWO_PI;
-    // change the particle's position over time:
-    let phi = rand([id, 3.321]) * PI + time / 10000;
-
-    // Change the radius to create a more interesting shape:
-    let r = 200 * sin(phi);
-    let x = r * sin(phi) * cos(theta);
-    // Stretch the y dimensions a little
-    let y = r * 1.5 * cos(phi);
-    let z = r * sin(phi) * sin(theta);
-    return [x, y, z];
-}
-
-getWorldInputs((inputs) => {
-    inputs.position += getAnimatedSpherePosition();
-    return inputs;
-});
-}
-
-async function setup() {
+  async function setup() {
     createCanvas(400, 400, WEBGL);
     pixelDensity(1);
     particleModel = buildGeometry(() => sphere(10, 4, 2));
     instancingShader = baseColorShader().modify(instancingCallback);
     instancingStrokeShader = baseStrokeShader().modify(instancingCallback);
-}
+  }
 
-function draw() {
+  function draw() {
     background(0);
     orbitControl();
     shader(instancingShader)
     fill(255, 100, 150)
     strokeShader(instancingStrokeShader)
     model(particleModel, 1000);
-}
+  }
 `} />
 
 By adding `time / 10000` to the phi angle and modifying the radius with `sin()`, we create animated particles that move around a pulsing, stretched sphere. Play around and see what other shapes you can create.
@@ -377,16 +377,16 @@ This is another relative view of the virtual world, where the camera is position
 This perspective makes it easier to determine how surfaces appear to the viewer:
 
 ```js
-function fresnelCallback() {
-  getCameraInputs((inputs) => {
-    // The normal vector on the sphere's surface
-    let normalVector = normalize(inputs.normal);
-    // This creates a vector pointing from the surface to the camera
-    let viewVector = normalize(-inputs.position);
-    // ...
-    return inputs;
-  })
-}
+  function fresnelCallback() {
+    getCameraInputs((inputs) => {
+      // The normal vector on the sphere's surface
+      let normalVector = normalize(inputs.normal);
+      // This creates a vector pointing from the surface to the camera
+      let viewVector = normalize(-inputs.position);
+      // ...
+      return inputs;
+    })
+  }
 ```
 
 The line let viewVector = normalize(-inputs.position) might seem counterintuitive, so let's break it down:
@@ -403,8 +403,8 @@ The core of the Fresnel effect is comparing two directions:
 2. The view direction (where the camera is relative to the surface)
 
 ```js
-let base = 1 - dot(normalVector, viewVector);
-let fresnel = pow(base, 2);
+  let base = 1 - dot(normalVector, viewVector);
+  let fresnel = pow(base, 2);
 ```
 The dot product between these directions measures how directly the surface at any point is facing the camera. Technically, it returns the cosine of the angle between them. What this really tells us is that, when the dot product of two vectors is:
 - **Equal to 1**, the vectors point in the same direction
@@ -419,7 +419,7 @@ We raise this value to a power with `pow(base, 2)` to make the transition more d
 
 #### Applying the effect to the color
 ```js
-let col = mix([0, 0, 0], [1, 0.5, 0.7], fresnel);
+  let col = mix([0, 0, 0], [1, 0.5, 0.7], fresnel);
 inputs.color = [col, 1];
 ```
 
@@ -430,37 +430,37 @@ As a note, `getCameraInputs` is inside of the **vertex shader**, which is usuall
 Notice the returned value above: `[col, 1]`. This is one of the ways in which vectors are prioritised as the main data type in shader languages, including p5.strands. We are able to construct a 4-component vector (`RGBA`) from a 3-component vector(`RGB`) plus a float (alpha). This is a hallmark of shader languages.
 
 <EditableSketch code={`
-let fresnelShader
+  let fresnelShader
 
-function fresnelCallback() {
+  function fresnelCallback() {
     const fresnelPower = uniformFloat(2);
     const fresnelBias = uniformFloat(-0.1);
     const fresnelScale = uniformFloat(4);
   
     getCameraInputs((inputs) => {
-        let n = normalize(inputs.normal);
-        let v = normalize(-inputs.position);
-        let base = 1.0 - dot(n, v);
-        let fresnel = fresnelScale * pow(base, fresnelPower) + fresnelBias;
-        let col = mix([0, 0, 0], [1, .5, .7], fresnel);
-        inputs.color = [col, 1];
-        return inputs;
+      let n = normalize(inputs.normal);
+      let v = normalize(-inputs.position);
+      let base = 1.0 - dot(n, v);
+      let fresnel = fresnelScale * pow(base, fresnelPower) + fresnelBias;
+      let col = mix([0, 0, 0], [1, .5, .7], fresnel);
+      inputs.color = [col, 1];
+      return inputs;
     });
-}
+  }
 
-async function setup() {
+  async function setup() {
     createCanvas(400, 400, WEBGL);
     pixelDensity(1);
     fresnelShader = baseColorShader().modify(fresnelCallback);
-}
+  }
 
-function draw() {
+  function draw() {
     background(0);
     noStroke();
     orbitControl();
     shader(fresnelShader)
     sphere(80);
-} 
+  } 
 `} />
 
 
@@ -486,24 +486,24 @@ For the `baseFilterShader()` there is only one hook available, `getColor(inputs,
 We can achieve a pixelation effect by sampling the color of the scene at fewer points than there are real pixels. If you are not familiar with texture coordinates, also known as UV coordinates, try returning `[inputs.texCoord, 0, 1]` at the end of the `getColor` function.
 
 <EditableSketch code={`
-let pixelateShader;
+  let pixelateShader;
 
-function pixelateCallback() {
+  function pixelateCallback() {
     getColor((inputs, canvasContent) => {
-        let coord = inputs.texCoord;
-        return [coord, 0, 1];
-  });
-}
+      let coord = inputs.texCoord;
+      return [coord, 0, 1];
+    });
+  }
 
-async function setup() {
+  async function setup() {
     createCanvas(200, 200);
     pixelDensity(1);
     pixelateShader = baseFilterShader().modify(pixelateCallback)
-}
+  }
 
-function draw() {
+  function draw() {
     filter(pixelateShader);
-}
+  }
 `}/>
 
 The top left corner of the screen is now black, as it has a value of `(0, 0)` in texture coordinates. Down in the bottom left, it's green, showing that the texture coordinates are `(0, 1)`, and there is red in the top right with a value of `(1, 0)`.
@@ -511,36 +511,36 @@ The top left corner of the screen is now black, as it has a value of `(0, 0)` in
 With that in mind, let's manipulate the number of texture coordinates, so that more pixels will sample their color from the same place on the original texture. We do this proportionally to `inputs.canvasSize` to get square pixels.
 
 <EditableSketch code={`
-let pixelateShader;
+  let pixelateShader;
 
-function pixelateCallback() {
+  function pixelateCallback() {
     const pixelCountX = uniformFloat(() => 80);
   
     getColor((inputs, canvasContent) => {
-        const aspectRatio = inputs.canvasSize.x / inputs.canvasSize.y;
-        const pixelSize = [pixelCountX, pixelCountX / aspectRatio];
+      const aspectRatio = inputs.canvasSize.x / inputs.canvasSize.y;
+      const pixelSize = [pixelCountX, pixelCountX / aspectRatio];
 
-        // Sample the canvasContent texture with the modified texCoord
-        const coord = inputs.texCoord;
-        const modifiedCoord = floor(coord * pixelSize) / pixelSize;
+      // Sample the canvasContent texture with the modified texCoord
+      const coord = inputs.texCoord;
+      const modifiedCoord = floor(coord * pixelSize) / pixelSize;
 
-        const col = getTexture(canvasContent, modifiedCoord);
-        return col;
+      const col = getTexture(canvasContent, modifiedCoord);
+      return col;
     });
-}
+  }
 
-async function setup() {
+  async function setup() {
     createCanvas(200, 200, WEBGL);
     pixelDensity(1);
     pixelateShader = baseFilterShader().modify(pixelateCallback)
-}
+  }
 
-function draw() {
+  function draw() {
     background(0);
     rotateY(millis()/2000)
     sphere(90);
     filter(pixelateShader);
-}
+  }
 `}/>
 This is the entire code for our pixelating shader. Put this filter at the bottom of our draw function to pixelate the entire scene by calling `filter(pixelShader)`. We also need to use `baseFilterShader().modify(pixelateCallback)` to construct the shader as before.
 
@@ -552,14 +552,14 @@ Bloom works by taking a blurred version of the image and setting some threshold 
 We could write the shader to produce the blurred image, but p5.js already has provided us with a `filter(BLUR)` which we can use. We will have to approach this effect slightly differently. Firstly, we will need to create a `p5.Framebuffer` object to capture the contents of the canvas before we blur it. 
 
 ```js
-let originalImage;
+  let originalImage;
 
-async function setup() {
+  async function setup() {
     // previous code...
     originalImage = createFramebuffer();
-}
+  }
 
-function draw() {
+  function draw() {
     // Draw the previous code to a framebuffer, so that we can store it before our  blur is applied.
     originalImage.begin();
     // previous code...
@@ -570,55 +570,55 @@ function draw() {
   
     // changing this value affects the spread of the bloom
     filter(BLUR, 15);
-}
+  }
 ```
 
  At this point, the sketch should look identical. However, we can now use this framebuffer in our bloom shader. We do so by creating another uniform, but this time a `uniformTexture`. We still want to define the default parameter as a function in order for it to be retrieved after we make the Framebuffer in `setup`.
 
 ```js
-function bloomCallback() {
+  function bloomCallback() {
     const ogImage = uniformTexture(() => originalImage)
   
     getColor((input, canvasContent) => {
-        // Get our textures converted into vector values.
-        const blurred = getTexture(canvasContent, input.texCoord);
-        const original = getTexture(ogImage, input.texCoord);
+      // Get our textures converted into vector values.
+      const blurred = getTexture(canvasContent, input.texCoord);
+      const original = getTexture(ogImage, input.texCoord);
     
-        const intensity = max(original, 0.3) * 1.5;
-        // Overlay the blurred image
-        const bloom = original + blurred * intensity;
-        return [bloom.rgb, 1]
+      const intensity = max(original, 0.3) * 1.5;
+      // Overlay the blurred image
+      const bloom = original + blurred * intensity;
+      return [bloom.rgb, 1]
     });
-}
+  }
 ```
 
 <EditableSketch code={`
-let bloomShader;
-let originalImage;
+  let bloomShader;
+  let originalImage;
 
-function bloomCallback() {
+  function bloomCallback() {
     const preBlur = uniformTexture(() => originalImage);
   
     getColor((input, canvasContent) => {
-        const blurred = getTexture(canvasContent, input.texCoord);
-        const original = getTexture(preBlur, input.texCoord);
+      const blurred = getTexture(canvasContent, input.texCoord);
+      const original = getTexture(preBlur, input.texCoord);
     
-        const intensity = max(original, 0.2) * 8;
-        
-        const bloom = original + blurred * intensity;
-        return [bloom.rgb, 1];
+      const intensity = max(original, 0.2) * 8;
+      
+      const bloom = original + blurred * intensity;
+      return [bloom.rgb, 1];
     });
-}
+  }
 
 
-async function setup() {
+  async function setup() {
     createCanvas(200, 200, WEBGL);
     pixelDensity(1);
     originalImage = createFramebuffer();
     bloomShader = baseFilterShader().modify(bloomCallback);
-}
+  }
 
-function draw() {
+  function draw() {
     // Draw the previous code to a framebuffer
     // so that we can store it before the blur
     originalImage.begin();
@@ -634,7 +634,7 @@ function draw() {
     // changing this value affects the spread of the bloom
     filter(BLUR, 20);
     filter(bloomShader);
-}
+  }
 `} />
 
 In the variable `brightPass`, we have two magic numbers which could be uniforms instead, or feel free to adjust the values to find something which looks good. The `0.2` inside of `max` acts as *a kind* of threshold. Areas which are full black in the blurred image will not be affected by bloom, as they will ultimately be multiplying by 0. The `8` multiplies the overall strength of the effect.
@@ -671,93 +671,93 @@ For more resources on shaders, try:
 
 ## Final Code
 <EditableSketch code={`
-let instancedShader;
-let instancedStrokeShader;
-let stars;
-let originalImage;
-let pixelateShader;
-let fresnelShader;
-let bloomShader;
+  let instancedShader;
+  let instancedStrokeShader;
+  let stars;
+  let originalImage;
+  let pixelateShader;
+  let fresnelShader;
+  let bloomShader;
 
-function fresnelShaderCallback() {
+  function fresnelShaderCallback() {
     const fresnelPower = uniformFloat(2);
     const fresnelBias = uniformFloat(-0.1);
     const fresnelScale = uniformFloat(2);
   
     getCameraInputs((inputs) => {
-        let n = normalize(inputs.normal);
-        let v = normalize(-inputs.position);
-        let base = 1.0 - dot(n, v);
-        let fresnel = fresnelScale * pow(base, fresnelPower) + fresnelBias;
-        let col = mix([0, 0, 0], [1, .5, .7], fresnel);
-        inputs.color = [col, 1];
-        return inputs;
+      let n = normalize(inputs.normal);
+      let v = normalize(-inputs.position);
+      let base = 1.0 - dot(n, v);
+      let fresnel = fresnelScale * pow(base, fresnelPower) + fresnelBias;
+      let col = mix([0, 0, 0], [1, .5, .7], fresnel);
+      inputs.color = [col, 1];
+      return inputs;
     });
-}
+  }
 
-function starShaderCallback() {
+  function starShaderCallback() {
     const time = uniformFloat(() => millis());
     const skyRadius = uniformFloat(250);
     
     function rand2(st) {
-        return fract(sin(dot(st, [12.9898, 78.233])) * 43758.5453123);
+      return fract(sin(dot(st, [12.9898, 78.233])) * 43758.5453123);
     }
   
     function semiSphere() {
-        let id = instanceID();
-        let theta = rand2([id, 0.1234])  * TWO_PI + time / 100000;
-        let phi = rand2([id, 3.321]) * PI + time / 50000;
+      let id = instanceID();
+      let theta = rand2([id, 0.1234])  * TWO_PI + time / 100000;
+      let phi = rand2([id, 3.321]) * PI + time / 50000;
 
-        let r = skyRadius;
-        r *= sin(phi);
-        let x = r * sin(phi) * cos(theta);
-        let y = r * 1.5 * cos(phi);
-        let z = r * sin(phi) * sin(theta);
-        return [x, y, z];
+      let r = skyRadius;
+      r *= sin(phi);
+      let x = r * sin(phi) * cos(theta);
+      let y = r * 1.5 * cos(phi);
+      let z = r * sin(phi) * sin(theta);
+      return [x, y, z];
     }
   
     getWorldInputs((inputs) => {
-        inputs.position += semiSphere();
-        return inputs;
+      inputs.position += semiSphere();
+      return inputs;
     });
   
     getObjectInputs((inputs) => {
-        let size = 1 + 0.5 * sin(time * 0.002 + instanceID());
-        inputs.position *= size;
-        return inputs;
+      let size = 1 + 0.5 * sin(time * 0.002 + instanceID());
+      inputs.position *= size;
+      return inputs;
     });
-}
+  }
 
-function pixelateShaderCallback() {
+  function pixelateShaderCallback() {
     const pixelCountX = uniformFloat(()=> 280);
 
     getColor((inputs, canvasContent) => {
-        const aspectRatio = inputs.canvasSize.x / inputs.canvasSize.y;
-        const pixelSize = [pixelCountX, pixelCountX / aspectRatio];
+      const aspectRatio = inputs.canvasSize.x / inputs.canvasSize.y;
+      const pixelSize = [pixelCountX, pixelCountX / aspectRatio];
 
-        let coord = inputs.texCoord;
-        coord = floor(coord * pixelSize) / pixelSize;
+      let coord = inputs.texCoord;
+      coord = floor(coord * pixelSize) / pixelSize;
 
-        let col = getTexture(canvasContent, coord);
-        return col//[coord, 0, 1];
+      let col = getTexture(canvasContent, coord);
+      return col//[coord, 0, 1];
     });
-}
+  }
 
-function bloomShaderCallback() {
+  function bloomShaderCallback() {
     const preBlur = uniformTexture(() => originalImage);
 
     getColor((input, canvasContent) => {
-        const blurredCol = getTexture(canvasContent, input.texCoord);
-        const originalCol = getTexture(preBlur, input.texCoord);
+      const blurredCol = getTexture(canvasContent, input.texCoord);
+      const originalCol = getTexture(preBlur, input.texCoord);
 
-        const intensity = max(originalCol, 0.1) * 12.2;
+      const intensity = max(originalCol, 0.1) * 12.2;
 
-        const bloom = originalCol + blurredCol * intensity;
-        return [bloom.rgb, 1];
+      const bloom = originalCol + blurredCol * intensity;
+      return [bloom.rgb, 1];
     });
-}
+  }
 
-async function setup(){
+  async function setup(){
     createCanvas(800, 600, WEBGL);
     pixelDensity(1);
     stars = buildGeometry(() => sphere(8, 4, 2))
@@ -768,9 +768,9 @@ async function setup(){
     fresnelShader = baseColorShader().modify(fresnelShaderCallback);
     bloomShader = baseFilterShader().modify(bloomShaderCallback);
     pixelateShader = baseFilterShader().modify(pixelateShaderCallback);
-}
+  }
 
-function draw(){
+  function draw(){
     originalImage.begin();
     background(0);
     orbitControl();
@@ -799,5 +799,5 @@ function draw(){
     
     filter(BLUR, 15)
     filter(bloomShader);
-}
+  }
 `} />

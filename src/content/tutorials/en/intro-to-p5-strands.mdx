@@ -810,9 +810,18 @@ For more resources on shaders, try:
 
 
 ## Experimental pipeline diagram
+## strands hooks pipeline diagram
+
+example overriding theme variables:
+```
+%%{init: {'theme': 'dark', 'themeVariables': { 'primaryColor': '#ff9966'}}}%%
+```
 
 ```mermaid
+%%{init: {'theme': 'dark'}}%%
 flowchart TD
+  classDef hooklesser fill:#fcc89a,stroke:#333,color:#222;
+  classDef hook fill:#f96,stroke:#333,stroke-width:2px,color:#202020;
   Start([Geometry]) --> BV
 
   subgraph Vertex_Shader ["Vertex Shader Pipeline"]
@@ -833,18 +842,18 @@ flowchart TD
       INPIX -.-> BLEND[Color Blending]
       BLEND -.-> COMB[[combineColors / getColor]]
       COMB -.-> FIN[Final Output Processing]
-      FIN -.-> FCOL[[finalColor]]
-      FCOL --> AF[[afterFragment]]
+      FIN -.-> FCOLR[[finalColor]]
+      FCOLR --> AF[[afterFragment]]
   end
   AF --> End([Screen Output])
-  style BV fill:#fcc89a,stroke:#333
-  style AV fill:#fcc89a,stroke:#333
-  style BF fill:#fcc89a,stroke:#333
-  style AF fill:#fcc89a,stroke:#333
-  style INOBJ fill:#f96,stroke:#333
-  style INWLD fill:#f96,stroke:#333
-  style INCAM fill:#f96,stroke:#333
-  style INPIX fill:#f96,stroke:#333
-  style COMB fill:#f96,stroke:#333
-  style FCOL fill:#f96,stroke:#333
+  
+  click INOBJ "https://beta.p5js.org/reference/#/p5.Shader" "p5.js Shader Reference"
+  click INWLD "https://beta.p5js.org/reference/#/p5.Shader" "p5.js Shader Reference"
+  click INCAM "https://beta.p5js.org/reference/#/p5.Shader" "p5.js Shader Reference"
+  click INPIX "https://beta.p5js.org/reference/#/p5.Shader" "p5.js Shader Reference"
+  click FCOLR "https://beta.p5js.org/reference/#/p5.Shader" "p5.js Shader Reference"
+
+  class INOBJ,INWLD,INCAM,INPIX,COMB,FCOLR hook
+  class BV,AV,BF,AF hooklesser
+
 ```

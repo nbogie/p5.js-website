@@ -171,33 +171,38 @@ Let's start by offsetting instances along the x-axis using `baseColorShader()`:
   let particleModel;
 
   function instancingCallback() {
-    getWorldInputs((inputs) => {
+    worldInputs.begin();
+    
     // Offset each instance by its ID
-    inputs.position.x += instanceID() * 20;
-      // Move the particles left on the screen
-      inputs.position.x -= 150;
-      return inputs;
-    });
+    worldInputs.position.x += instanceID() * 20;
+    // Move the particles left on the screen
+    worldInputs.position.x -= 150;
+    
+    worldInputs.end();
   }
 
   async function setup() {
     createCanvas(300, 300, WEBGL);
     pixelDensity(1);
-    particleModel = buildGeometry(() => sphere(10, 10, 2));
-    instancingShader = baseColorShader().modify(instancingCallback);
-    instancingStrokeShader = baseStrokeShader().modify(instancingCallback);
+    particleModel = 
+      buildGeometry(() => sphere(10, 10, 2));
+    instancingShader = 
+      buildColorShader(instancingCallback);
+    instancingStrokeShader = 
+      buildStrokeShader(instancingCallback);
   }
 
   function draw() {
     background(0);
     orbitControl();
-    shader(instancingShader)
-    strokeShader(instancingStrokeShader)
+    shader(instancingShader);
+    strokeShader(instancingStrokeShader);
     model(particleModel, 16);
   }
 `} />
 
-The getWorldInputs() callback receives an inputs struct containing data about the current vertex: `position`, `normal`, `texCoord`, and `color`. The "world" part indicates that this runs after JavaScript transformations like translate() or scale() have been applied.
+The worldInputs block contains data about the current vertex: `position`, `normal`, `texCoord`, and `color`. The "world" part indicates that this runs after JavaScript transformations like translate() or scale() have been applied.
+{/* TODO: have a pipeline diagram early that we repeatedly reference. */}
 
 <Callout title='World Space vs. Object Space'>
 Moving in world space is like moving relative to the entire scene, while object transformations are relative to the object's center.

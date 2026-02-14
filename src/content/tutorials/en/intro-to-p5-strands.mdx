@@ -820,11 +820,11 @@ flowchart TD
 
   subgraph Vertex_Shader ["Vertex Shader Pipeline"]
       BV[[beforeVertex]] --> OBJ[Object Space]
-      OBJ -.-> INOBJ[[objectInputs]]
+      OBJ -.-> INOBJ[[objectInputs:<br/>position, normal, texCoord, color]]
       INOBJ -.-> WORLD[World Space]
-      WORLD -.-> INWLD[[worldInputs]]
+      WORLD -.-> INWLD[[worldInputs:<br/>position, normal, texCoord, color]]
       INWLD -.-> CAM[Camera/View Space]
-      CAM -.-> INCAM[[cameraInputs]]
+      CAM -.-> INCAM[[cameraInputs:<br/>position, normal, texCoord, color]]
       INCAM -.-> PROJ[Projection Space]
       PROJ --> AV[[afterVertex]]
   end
@@ -832,22 +832,29 @@ flowchart TD
   subgraph Fragment_Shader ["Fragment Shader Pipeline"]
       Raster --> BF[[beforeFragment]]
       BF --> L_MAT[Lighting & Material]
-      L_MAT -.-> INPIX[[pixelInputs]]
+      L_MAT -.-> INPIX[[pixelInputs:<br/>normal, texCoord, ambientLight, ambientMaterial, specularMaterial, emissiveMaterial, color, shininess, metalness]]
       INPIX -.-> BLEND[Color Blending]
-      BLEND -.-> COMB[[combineColors / getColor]]
+      BLEND -.-> COMB[[combineColors:<br/>baseColor, diffuse, ambientColor, ambient, specularColor, specular, emissive, opacity, set
+ ]]
       COMB -.-> FIN[Final Output Processing]
-      FIN -.-> FCOLR[[finalColor]]
-      FCOLR --> AF[[afterFragment]]
+      FIN -.-> FINCOL[[finalColor:<br/>color, set]]
+      FINCOL --> AF[[afterFragment]]
+
   end
   AF --> End([Screen Output])
-  
-  click INOBJ "https://beta.p5js.org/reference/#/p5.Shader" "p5.js Shader Reference"
-  click INWLD "https://beta.p5js.org/reference/#/p5.Shader" "p5.js Shader Reference"
-  click INCAM "https://beta.p5js.org/reference/#/p5.Shader" "p5.js Shader Reference"
-  click INPIX "https://beta.p5js.org/reference/#/p5.Shader" "p5.js Shader Reference"
-  click FCOLR "https://beta.p5js.org/reference/#/p5.Shader" "p5.js Shader Reference"
+subgraph TODO ["TODO"]
+  FILCOL[[filterColor:<br/>texCoord, canvasSize, texelSize, canvasContent, set]]
+  end
 
-  class INOBJ,INWLD,INCAM,INPIX,COMB,FCOLR hook
+  click INOBJ "https://beta.p5js.org/reference/p5/objectinputs/" "objectInputs Reference"
+  click INWLD "https://beta.p5js.org/reference/p5/worldinputs/" "worldInputs Reference"
+  click INCAM "https://beta.p5js.org/reference/p5/camerainputs/" "cameraInputs Reference"
+  click INPIX "https://beta.p5js.org/reference/p5/pixelinputs/" "pixelInputs Reference"
+  click COMB "https://beta.p5js.org/reference/p5/combineColors/" "combineColors Reference"
+  click FINCOL "https://beta.p5js.org/reference/p5/finalcolor/" "finalColor Reference"
+  click FILCOL "https://beta.p5js.org/reference/p5/filtercolor/" "filterColor Reference"
+
+  class INOBJ,INWLD,INCAM,INPIX,COMB,FINCOL,FILCOL hook
   class BV,AV,BF,AF hooklesser
 
 ```

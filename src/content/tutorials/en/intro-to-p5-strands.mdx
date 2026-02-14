@@ -808,14 +808,8 @@ For more resources on shaders, try:
 `} />
 
 
+## Experimental strands hooks pipeline diagram
 
-## Experimental pipeline diagram
-## strands hooks pipeline diagram
-
-example overriding theme variables:
-```
-%%{init: {'theme': 'dark', 'themeVariables': { 'primaryColor': '#ff9966'}}}%%
-```
 
 ```mermaid
 %%{init: {'theme': 'dark'}}%%
@@ -856,4 +850,10 @@ flowchart TD
   class INOBJ,INWLD,INCAM,INPIX,COMB,FCOLR hook
   class BV,AV,BF,AF hooklesser
 
+```
+
+
+#### example overriding mermaid theme variables:
+```
+%%{init: {'theme': 'dark', 'themeVariables': { 'primaryColor': '#ff9966'}}}%%
 ```

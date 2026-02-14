@@ -813,33 +813,38 @@ For more resources on shaders, try:
 
 ```mermaid
 flowchart TD
+  Start([Geometry]) --> BV
+
   subgraph Vertex_Shader ["Vertex Shader Pipeline"]
-      V_Start([Start Vertex]) --> BV[beforeVertex]
-      BV --> OBJ[Object Space]
-      OBJ -.-> GOBJ[[getObjectInputs]]
-      GOBJ -.-> WORLD[World Space]
-      WORLD -.-> GWRD[[getWorldInputs]]
-      GWRD -.-> CAM[Camera/View Space]
-      CAM -.-> GCAM[[getCameraInputs]]
-      GCAM -.-> PROJ[Projection Space]
-      PROJ --> AV[afterVertex]
+      BV[[beforeVertex]] --> OBJ[Object Space]
+      OBJ -.-> INOBJ[[objectInputs]]
+      INOBJ -.-> WORLD[World Space]
+      WORLD -.-> INWLD[[worldInputs]]
+      INWLD -.-> CAM[Camera/View Space]
+      CAM -.-> INCAM[[cameraInputs]]
+      INCAM -.-> PROJ[Projection Space]
+      PROJ --> AV[[afterVertex]]
   end
   AV --> Raster[Rasterization]
   subgraph Fragment_Shader ["Fragment Shader Pipeline"]
-      Raster --> BF[beforeFragment]
+      Raster --> BF[[beforeFragment]]
       BF --> L_MAT[Lighting & Material]
-      L_MAT -.-> GPI[[getPixelInputs]]
-      GPI -.-> BLEND[Color Blending]
+      L_MAT -.-> INPIX[[pixelInputs]]
+      INPIX -.-> BLEND[Color Blending]
       BLEND -.-> COMB[[combineColors / getColor]]
       COMB -.-> FIN[Final Output Processing]
-      FIN -.-> GFC[[getFinalColor]]
-      GFC --> AF[afterFragment]
+      FIN -.-> FCOL[[finalColor]]
+      FCOL --> AF[[afterFragment]]
   end
   AF --> End([Screen Output])
-  style GOBJ fill:#f96,stroke:#333
-  style GWRD fill:#f96,stroke:#333
-  style GCAM fill:#f96,stroke:#333
-  style GPI fill:#9cf,stroke:#333
-  style COMB fill:#9cf,stroke:#333
-  style GFC fill:#9cf,stroke:#333
+  style BV fill:#fcc89a,stroke:#333
+  style AV fill:#fcc89a,stroke:#333
+  style BF fill:#fcc89a,stroke:#333
+  style AF fill:#fcc89a,stroke:#333
+  style INOBJ fill:#f96,stroke:#333
+  style INWLD fill:#f96,stroke:#333
+  style INCAM fill:#f96,stroke:#333
+  style INPIX fill:#f96,stroke:#333
+  style COMB fill:#f96,stroke:#333
+  style FCOL fill:#f96,stroke:#333
 ```

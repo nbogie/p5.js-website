@@ -21,9 +21,6 @@ authors:
 
 import EditableSketch from "../../../components/EditableSketch/index.astro";
 import Callout from "../../../components/Callout/index.astro";
-import DynamicToC from "@components/DynamicToC/index.tsx";
-
-<DynamicToC client:load />
 
 ## Introduction
 
@@ -858,7 +855,9 @@ For more resources on shaders, try:
 `} />
 
 
-## Experimental strands hooks pipeline diagram
+## Strands hooks reference diagram
+
+(temporary, experimental)
 
 
 ```mermaid
@@ -910,8 +909,11 @@ flowchart TD
 
 ```
 
-
+{
+/*
 #### example overriding mermaid theme variables:
 ```
 %%{init: {'theme': 'dark', 'themeVariables': { 'primaryColor': '#ff9966'}}}%%
 ```
+
+*/}

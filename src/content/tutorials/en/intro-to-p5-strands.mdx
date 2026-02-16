@@ -232,36 +232,30 @@ Now let's distribute our particles in a more interesting pattern - placing them 
   let particleModel;
 
   function instancingCallback() {
-    // a pseudorandom function from:
-    // https://stackoverflow.com/questions/4200224/random-noise-functions-for-glsl
-    function rand(seed) {
-      return fract(sin(dot(seed, [12.9898, 78.233])) * 43758.5453123);
-    }
-
     function randomPositionOnSphere() {
       let id = instanceID();
-      let theta = rand([id, 0.1234])  * TWO_PI;
-      let phi = rand([id, 3.321]) * PI;
-  
+      let theta = noise([id, 0.1234])  * TWO_PI;
+      let phi = noise([id, 3.321]) * PI;
       let r = 180;
       let x = r * sin(phi) * cos(theta);
       let y = r * cos(phi);
       let z = r * sin(phi) * sin(theta);
       return [x, y, z];
     }
-  
-    getWorldInputs((inputs) => {
-      inputs.position += randomPositionOnSphere();
-      return inputs;
-    });
+    worldInputs.begin();
+    worldInputs.position += 
+      randomPositionOnSphere();
+    worldInputs.end();  
   }
 
   async function setup() {
     createCanvas(400, 400, WEBGL);
     pixelDensity(1);
     particleModel = buildGeometry(createSphere);
-    instancingShader = baseColorShader().modify(instancingCallback);
-    instancingStrokeShader = baseStrokeShader().modify(instancingCallback);
+    instancingShader = 
+      buildColorShader(instancingCallback);
+    instancingStrokeShader = 
+      buildStrokeShader(instancingCallback);
   }
 
   function draw() {
@@ -272,17 +266,13 @@ Now let's distribute our particles in a more interesting pattern - placing them 
     strokeShader(instancingStrokeShader)
     model(particleModel, 1000);
   }
-  
+
   function createSphere(){
     sphere(10, 4, 2);
   }
 `} />
 
-The `rand()` helper function uses three GLSL functions ported to p5.strands:
-- `fract()`: Takes the fractional part of a number (e.g., `3.42` → `0.42`)
-- `sin()`: Returns the sine of an angle
-- `dot()`: Returns the dot product of two vectors, which measures their similarity.
-While these functions have their conventional mathematical meanings, here they're combined to generate pseudorandom values based on the instance ID.
+The noise() function is used to generate pseudorandom values based on the instance ID.
 
 #### Adding movement to the particles
 For animating the particles, we will introduce the concept of uniform variables. 
@@ -303,24 +293,22 @@ For our case, let's set a callback which does the same thing, for our uniform va
   let instancingShader;
   let instancingStrokeShader;
   let particleModel;
-
+  
   function instancingCallback() {
     // Add the uniform declaration
     const time = uniformFloat(() => millis());
-
-    // a pseudorandom function from:
-    // https://stackoverflow.com/questions/4200224/random-noise-functions-for-glsl
-    function rand(seed) {
-      return fract(sin(dot(seed, [12.9898, 78.233])) * 43758.5453123);
-    }
-
+  
+  
     function getAnimatedSpherePosition() {
       let id = instanceID();
-      let theta = rand([id, 0.1234])  * TWO_PI;
-      // change the particle's position over time:
-      let phi = rand([id, 3.321]) * PI + time / 10000;
+      let theta = noise([id, 0.1234])  * TWO_PI;
+      // change the particle's position 
+      // over time:
+      let phi = noise([id, 3.321]) * PI + 
+                time / 10000;
   
-      // Change the radius to create a more interesting shape:
+      // Change the radius to create a more 
+      //interesting shape:
       let r = 200 * sin(phi);
       let x = r * sin(phi) * cos(theta);
       // Stretch the y dimensions a little
@@ -328,21 +316,23 @@ For our case, let's set a callback which does the same thing, for our uniform va
       let z = r * sin(phi) * sin(theta);
       return [x, y, z];
     }
-
-    getWorldInputs((inputs) => {
-      inputs.position += getAnimatedSpherePosition();
-      return inputs;
-    });
+    
+    worldInputs.begin();
+    worldInputs.position += 
+      getAnimatedSpherePosition();
+    worldInputs.end();
   }
-
+  
   async function setup() {
     createCanvas(400, 400, WEBGL);
     pixelDensity(1);
     particleModel = buildGeometry(createSphere);
-    instancingShader = baseColorShader().modify(instancingCallback);
-    instancingStrokeShader = baseStrokeShader().modify(instancingCallback);
+    instancingShader = 
+      buildColorShader(instancingCallback);
+    instancingStrokeShader = 
+      buildStrokeShader(instancingCallback);
   }
-
+  
   function draw() {
     background(0);
     orbitControl();

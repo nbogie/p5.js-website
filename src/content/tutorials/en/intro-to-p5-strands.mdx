@@ -842,9 +842,10 @@ flowchart TD
 
   end
   AF --> End([Screen Output])
-subgraph TODO ["TODO"]
-  FILCOL[[filterColor:<br/>texCoord, canvasSize, texelSize, canvasContent, set]]
-  end
+  %%For filterColor - only in filterShader
+  %%subgraph TODO ["TODO"]
+  %%  FILCOL[[filterColor:<br/>texCoord, canvasSize, texelSize, canvasContent, set]]
+  %%  end
 
   click INOBJ "https://beta.p5js.org/reference/p5/objectinputs/" "objectInputs Reference"
   click INWLD "https://beta.p5js.org/reference/p5/worldinputs/" "worldInputs Reference"

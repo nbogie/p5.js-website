@@ -21,7 +21,9 @@ authors:
 
 import EditableSketch from "../../../components/EditableSketch/index.astro";
 import Callout from "../../../components/Callout/index.astro";
+import DynamicToC from "../../../components/DynamicToC/index.tsx";
 
+<DynamicToC client:load/>
 ## Introduction
 
 **p5.strands** is a new way of writing shaders using JavaScript in p5.js. While many shader effects *could* be created with the p5.js 2D renderer, shaders are best for applying complex effects to many objects. Like any medium, shaders also offer their own creative possibilities!
@@ -159,9 +161,21 @@ In GPU instancing, we ask the GPU to draw multiple copies of the same object, ea
 In p5.js, instancing is available via optional parameters for `endShape` and `model`. It does also require a custom shader to work. In our case, let's use `model` and build a sphere shape.
 
 ```js
-particleModel = buildGeometry(() => sphere(10, 2, 4));
+function setup(){
+  particleModel = 
+      buildGeometry(createSphere);
+}
+
+function createSphere(){
+    sphere(10, 4, 2);
+}
+
+function draw(){
+  shader(instancingShader);
+  //make 10 instances of our model
+  model(particleModel, 10); 
+}
 ```
-{/* TODO: address arrow fn above */}
 
 Let's start by offsetting instances along the x-axis using `baseColorShader()`:
 
@@ -185,7 +199,7 @@ Let's start by offsetting instances along the x-axis using `baseColorShader()`:
     createCanvas(300, 300, WEBGL);
     pixelDensity(1);
     particleModel = 
-      buildGeometry(() => sphere(10, 10, 2));
+      buildGeometry(createSphere);
     instancingShader = 
       buildColorShader(instancingCallback);
     instancingStrokeShader = 
@@ -198,6 +212,10 @@ Let's start by offsetting instances along the x-axis using `baseColorShader()`:
     shader(instancingShader);
     strokeShader(instancingStrokeShader);
     model(particleModel, 16);
+  }
+
+  function createSphere(){
+    sphere(10, 10, 2);
   }
 `} />
 
@@ -243,7 +261,7 @@ Now let's distribute our particles in a more interesting pattern - placing them 
   async function setup() {
     createCanvas(400, 400, WEBGL);
     pixelDensity(1);
-    particleModel = buildGeometry(() => sphere(10, 4, 2));
+    particleModel = buildGeometry(createSphere);
     instancingShader = baseColorShader().modify(instancingCallback);
     instancingStrokeShader = baseStrokeShader().modify(instancingCallback);
   }
@@ -255,6 +273,10 @@ Now let's distribute our particles in a more interesting pattern - placing them 
     fill(255, 100, 150)
     strokeShader(instancingStrokeShader)
     model(particleModel, 1000);
+  }
+  
+  function createSphere(){
+    sphere(10, 4, 2);
   }
 `} />
 
@@ -318,7 +340,7 @@ For our case, let's set a callback which does the same thing, for our uniform va
   async function setup() {
     createCanvas(400, 400, WEBGL);
     pixelDensity(1);
-    particleModel = buildGeometry(() => sphere(10, 4, 2));
+    particleModel = buildGeometry(createSphere);
     instancingShader = baseColorShader().modify(instancingCallback);
     instancingStrokeShader = baseStrokeShader().modify(instancingCallback);
   }
@@ -330,6 +352,10 @@ For our case, let's set a callback which does the same thing, for our uniform va
     fill(255, 100, 150)
     strokeShader(instancingStrokeShader)
     model(particleModel, 1000);
+  }
+
+  function createSphere(){
+    sphere(10, 4, 2);
   }
 `} />
 
@@ -470,7 +496,7 @@ Notice the returned value above: `[col, 1]`. This is one of the ways in which ve
 
 
 <Callout title="Tip">
-Try sending `const mousePos = uniformVector2(() => [mouseX, mouseY])` to this shader, and using those values for an interactive, color changing effect instead of the hardcoded pink.
+Try using the `mouseX` and `mouseY` values for an interactive, color changing effect instead of the hardcoded pink.
 </ Callout>
 
 #### Fine-tuning
@@ -765,7 +791,7 @@ For more resources on shaders, try:
   async function setup(){
     createCanvas(800, 600, WEBGL);
     pixelDensity(1);
-    stars = buildGeometry(() => sphere(8, 4, 2))
+    stars = buildGeometry(createSphere);
     originalImage = createFramebuffer();
   
     starShader = baseMaterialShader().modify(starShaderCallback); 
@@ -804,6 +830,9 @@ For more resources on shaders, try:
     
     filter(BLUR, 15)
     filter(bloomShader);
+  }
+  function createSphere(){
+    sphere(8, 4, 2);
   }
 `} />
 

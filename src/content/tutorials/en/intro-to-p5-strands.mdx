@@ -724,30 +724,27 @@ For more resources on shaders, try:
     const fresnelPower = uniformFloat(2);
     const fresnelBias = uniformFloat(-0.1);
     const fresnelScale = uniformFloat(2);
-  
-    getCameraInputs((inputs) => {
-      let n = normalize(inputs.normal);
-      let v = normalize(-inputs.position);
-      let base = 1.0 - dot(n, v);
-      let fresnel = fresnelScale * pow(base, fresnelPower) + fresnelBias;
-      let col = mix([0, 0, 0], [1, .5, .7], fresnel);
-      inputs.color = [col, 1];
-      return inputs;
-    });
+    
+    cameraInputs.begin();
+    
+    let n = normalize(cameraInputs.normal);
+    let v = normalize(-cameraInputs.position);
+    let base = 1.0 - dot(n, v);
+    let fresnel = fresnelScale * pow(base, fresnelPower) + fresnelBias;
+    let col = mix([0, 0, 0], [1, .5, .7], fresnel);
+    cameraInputs.color = [col, 1];
+    cameraInputs.end(); 
+    
   }
 
   function starShaderCallback() {
     const time = uniformFloat(() => millis());
     const skyRadius = uniformFloat(250);
     
-    function rand2(st) {
-      return fract(sin(dot(st, [12.9898, 78.233])) * 43758.5453123);
-    }
-  
     function semiSphere() {
       let id = instanceID();
-      let theta = rand2([id, 0.1234])  * TWO_PI + time / 100000;
-      let phi = rand2([id, 3.321]) * PI + time / 50000;
+      let theta = noise([id, 0.1234])  * TWO_PI + time / 100000;
+      let phi = noise([id, 3.321]) * PI + time / 50000;
 
       let r = skyRadius;
       r *= sin(phi);
@@ -757,45 +754,50 @@ For more resources on shaders, try:
       return [x, y, z];
     }
   
-    getWorldInputs((inputs) => {
-      inputs.position += semiSphere();
-      return inputs;
-    });
+    worldInputs.begin();
+    worldInputs.position += semiSphere();
+    worldInputs.end();
   
-    getObjectInputs((inputs) => {
-      let size = 1 + 0.5 * sin(time * 0.002 + instanceID());
-      inputs.position *= size;
-      return inputs;
-    });
+    objectInputs.begin();
+    let size = 1 + 0.5 * sin(time * 0.002 + instanceID());
+    objectInputs.position *= size;
+    objectInputs.end();
   }
 
   function pixelateShaderCallback() {
     const pixelCountX = uniformFloat(()=> 280);
 
-    getColor((inputs, canvasContent) => {
-      const aspectRatio = inputs.canvasSize.x / inputs.canvasSize.y;
-      const pixelSize = [pixelCountX, pixelCountX / aspectRatio];
+    filterColor.begin();
+    const aspectRatio = filterColor.canvasSize.x 
+                        / filterColor.canvasSize.y;
+    const pixelSize = [pixelCountX, pixelCountX 
+                                    / aspectRatio];
 
-      let coord = inputs.texCoord;
-      coord = floor(coord * pixelSize) / pixelSize;
+    let coord = filterColor.texCoord;
+    coord = floor(coord * pixelSize) / pixelSize;
 
-      let col = getTexture(canvasContent, coord);
-      return col//[coord, 0, 1];
-    });
+    let col = getTexture(filterColor.canvasContent, 
+                         coord);      
+    filterColor.set(col) //[coord, 0, 1];
+    filterColor.end();
   }
 
   function bloomShaderCallback() {
     const preBlur = uniformTexture(() => originalImage);
 
-    getColor((input, canvasContent) => {
-      const blurredCol = getTexture(canvasContent, input.texCoord);
-      const originalCol = getTexture(preBlur, input.texCoord);
+    filterColor.begin();
+    const blurredCol = getTexture(
+        filterColor.canvasContent, 
+        filterColor.texCoord);
+    const originalCol = getTexture(
+        preBlur, filterColor.texCoord);
 
-      const intensity = max(originalCol, 0.1) * 12.2;
+    const intensity = max(originalCol, 0.1) * 12.2;
 
-      const bloom = originalCol + blurredCol * intensity;
-      return [bloom.rgb, 1];
-    });
+    const bloom = 
+      originalCol + blurredCol * intensity;
+    filterColor.set([bloom.rgb, 1]);
+    filterColor.end();
   }
 
   async function setup(){
@@ -804,11 +806,16 @@ For more resources on shaders, try:
     stars = buildGeometry(createSphere);
     originalImage = createFramebuffer();
   
-    starShader = baseMaterialShader().modify(starShaderCallback); 
-    starStrokeShader = baseStrokeShader().modify(starShaderCallback)
-    fresnelShader = baseColorShader().modify(fresnelShaderCallback);
-    bloomShader = baseFilterShader().modify(bloomShaderCallback);
-    pixelateShader = baseFilterShader().modify(pixelateShaderCallback);
+    starShader = 
+      buildMaterialShader(starShaderCallback); 
+    starStrokeShader = 
+      buildStrokeShader(starShaderCallback)
+    fresnelShader = 
+      buildColorShader(fresnelShaderCallback);
+    bloomShader = 
+      buildFilterShader(bloomShaderCallback);
+    pixelateShader = 
+      buildFilterShader(pixelateShaderCallback);
   }
 
   function draw(){
@@ -841,6 +848,7 @@ For more resources on shaders, try:
     filter(BLUR, 15)
     filter(bloomShader);
   }
+
   function createSphere(){
     sphere(8, 4, 2);
   }

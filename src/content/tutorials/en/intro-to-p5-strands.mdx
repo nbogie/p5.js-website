@@ -134,7 +134,7 @@ In this sketch, you should see a yellow sphere.
 3. Modifying shaders: The pattern works like this:
 - Choose a build function, e.g. `buildColorShader()`, `buildMaterialShader()`, `buildFilterShader()`, `buildStrokeShader()`
 - pass in your callback function
-- Inside your callback, use the strand blocks such as `finalColor` to specify how your shader will be different from the default.
+- Inside your callback, use the strand blocks such as `finalColor` to override different parts of the default shader's behavior.
 4. Vectors: Shaders work with vectors — collections of numbers that represent colors, positions, etc. In p5.strands, you can create vectors using array syntax `[x, y, z, w]` or the `vec4()` function.
   - For example, `[1, 1, 0, 1]` made a 4-element vector representing a color.  The elements are Red, Green, Blue, and Alpha, all ranging between 0 and 1.
 
@@ -142,7 +142,7 @@ In this sketch, you should see a yellow sphere.
 p5.strands provides the following builder functions. Click the links below for their reference which tells us what functions are available for overriding.
 - [`buildColorShader`](/reference/p5/buildColorShader): Builds the default shader type in WebGL mode.
 - [`buildMaterialShader`](/reference/p5/buildMaterialShader): Builds the type of shader automatically applied if you have any lights in the scene.
-- [`buildNormalShader`](/reference/p5/buildNormalShader): Builds a default normally applied by calling `normalMaterial()`.
+- [`buildNormalShader`](/reference/p5/buildNormalShader): Builds a default normally applied by calling `normalMaterial()`.  Often used in visually debugging geometry.
 - [`buildStrokeShader`](/reference/p5/buildStrokeShader): Builds a shader type used to shade the geometry of strokes in 3D modes.
 - [`buildFilterShader`](/reference/p5/buildFilterShader): Builds a shader type for post-processing such as those provided by p5.js, like `filter(BLUR)`.
 

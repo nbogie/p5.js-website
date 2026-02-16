@@ -5,25 +5,6 @@ interface TOCItem {
   title: string;
 }
 
-const extractTitle = (code: string): string | null => {
-  return code
-    .split(/\r?\n/)
-    .map(line => line.match(/\/\/\s*(.+)/)?.[1]?.trim())
-    .find(content => !!content && !content.startsWith('http')) || null;
-};
-
-const processIslands = (islands: Element[]): TOCItem[] => {
-  return Array.from(islands).map((island, index) => {
-    const editor = island.querySelector('.cm-content') as HTMLElement;
-    const container = island.querySelector('.my-md') as HTMLElement;
-    if (!editor || !container) return null;
-    const id = `sketch-${index}`;
-    if (container.id !== id) container.id = id;
-    const title = extractTitle(editor.innerText || "") || `Sketch ${index + 1}`;
-    return { id, title };
-  }).filter((item): item is TOCItem => !!item);
-};
-
 export default function DynamicToC() {
   const [items, setItems] = useState<TOCItem[]>([]);
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
@@ -98,3 +79,22 @@ export default function DynamicToC() {
     </aside>
   );
 }
+
+const extractTitle = (code: string): string | null => {
+  return code
+    .split(/\r?\n/)
+    .map(line => line.match(/\/\/\s*(.+)/)?.[1]?.trim())
+    .find(content => !!content && !content.startsWith('http')) || null;
+};
+
+const processIslands = (islands: Element[]): TOCItem[] => {
+  return Array.from(islands).map((island, index) => {
+    const editor = island.querySelector('.cm-content') as HTMLElement;
+    const container = island.querySelector('.my-md') as HTMLElement;
+    if (!editor || !container) return null;
+    const id = `sketch-${index}`;
+    if (container.id !== id) container.id = id;
+    const title = extractTitle(editor.innerText || "") || `Sketch ${index + 1}`;
+    return { id, title };
+  }).filter((item): item is TOCItem => !!item);
+};

@@ -6,7 +6,6 @@ interface TOCItem {
 }
 
 // --- PURE UTILS ---
-
 const extractTitle = (code: string): string | null => {
   return code
     .split(/\r?\n/)
@@ -19,7 +18,6 @@ const processIslands = (islands: Element[]): TOCItem[] => {
     .map((island, index) => {
       const editor = island.querySelector('.cm-content') as HTMLElement;
       const container = island.querySelector('.my-md') as HTMLElement;
-
       if (!editor || !container) return null;
 
       const id = `sketch-${index}`;
@@ -27,45 +25,10 @@ const processIslands = (islands: Element[]): TOCItem[] => {
 
       const code = editor.innerText || "";
       const title = extractTitle(code) || `Sketch ${index + 1}`;
-
       return { id, title };
     })
     .filter((item): item is TOCItem => !!item);
 };
-
-// --- COMPONENTS ---
-
-const TOCEntry = ({ 
-  item, 
-  index, 
-  isChecked, 
-  onToggle 
-}: { 
-  item: TOCItem, 
-  index: number, 
-  isChecked: boolean, 
-  onToggle: (id: string) => void 
-}) => (
-  <li className="flex items-start gap-3 group">
-    <input 
-      type="checkbox" 
-      checked={isChecked} 
-      onChange={() => onToggle(item.id)}
-      className="mt-1 h-3.5 w-3.5 accent-indigo-600 cursor-pointer shrink-0"
-    />
-    <a 
-      href={`#${item.id}`} 
-      className={`text-xs leading-snug transition-all ${
-        isChecked ? 'text-slate-400 line-through italic' : 'text-indigo-600 font-medium'
-      }`}
-    >
-      <span className="text-[10px] font-mono opacity-40 mr-1">
-        {(index + 1).toString().padStart(2, '0')}
-      </span>
-      {item.title}
-    </a>
-  </li>
-);
 
 export default function DynamicToC() {
   const [items, setItems] = useState<TOCItem[]>([]);
@@ -84,11 +47,7 @@ export default function DynamicToC() {
     const timer = setTimeout(runScan, 200);
     const observer = new MutationObserver(runScan);
     observer.observe(document.body, { childList: true, subtree: true });
-
-    return () => {
-      clearTimeout(timer);
-      observer.disconnect();
-    };
+    return () => { clearTimeout(timer); observer.disconnect(); };
   }, []);
 
   const handleToggle = (id: string) => {
@@ -105,51 +64,71 @@ export default function DynamicToC() {
   };
 
   if (items.length === 0) return null;
-
   const completedCount = Object.values(checkedItems).filter(Boolean).length;
-  const progressPercent = (completedCount / items.length) * 100;
 
   return (
-    <aside className="fixed right-0 top-32 w-64 z-[9999] bg-white border-y border-l border-slate-200 shadow-xl rounded-l-2xl p-5 font-sans">
-      <header className="border-b border-slate-100 pb-3 mb-4 space-y-3">
-        {/* Top Row: Labels and Clear Button */}
-        <div className="flex justify-between items-start">
-          <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Progress</h2>
+    <aside 
+      className="fixed right-0 top-40 w-80 z-[9999] bg-white border border-slate-200 shadow-2xl rounded-l-2xl flex flex-col font-sans"
+      style={{ maxHeight: 'calc(100vh - 200px)' }}
+    >
+      {/* Header - Z-index ensures it stays on top of list items */}
+      <div className="relative z-20 p-5 bg-slate-50 border-b border-slate-100 rounded-tl-2xl">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tutorial Progress</h2>
           <button 
             onClick={clearAll}
-            className="text-[9px] font-bold text-rose-400 hover:text-rose-600 uppercase tracking-tighter transition-colors"
+            className="text-[10px] font-bold text-rose-500 hover:text-white hover:bg-rose-500 border border-rose-200 px-2 py-1 rounded transition-all shadow-sm"
           >
-            Clear All
+            CLEAR ALL
           </button>
         </div>
-
-        {/* Bottom Row: Stats and Bar */}
-        <div className="flex items-center gap-3">
-          <span className="text-[10px] font-mono font-bold text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded shrink-0">
-            {completedCount}/{items.length}
-          </span>
-          <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+        
+        <div className="flex items-center gap-4">
+          <div className="flex-1 h-2.5 bg-slate-200 rounded-full overflow-hidden shadow-inner">
             <div 
-              className="h-full bg-indigo-400 transition-all duration-500" 
-              style={{ width: `${progressPercent}%` }}
+              className="h-full bg-indigo-500 transition-all duration-700 ease-out" 
+              style={{ width: `${(completedCount / items.length) * 100}%` }}
             />
           </div>
+          <span className="text-xs font-mono font-black text-indigo-600 min-w-[40px] text-right">
+            {completedCount}/{items.length}
+          </span>
         </div>
-      </header>
+      </div>
 
-      <nav className="max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
-        <ol className="space-y-4">
+      {/* List - overflow-y-auto only here, with hidden scrollbars for a clean look */}
+      <nav className="relative z-10 flex-1 overflow-y-auto p-5 scrollbar-hide">
+        <ol className="space-y-5">
           {items.map((item, i) => (
-            <TOCEntry 
-              key={item.id} 
-              item={item} 
-              index={i} 
-              isChecked={!!checkedItems[item.id]} 
-              onToggle={handleToggle} 
-            />
+            <li key={item.id} className="flex items-start gap-4">
+              <div className="relative flex items-center justify-center">
+                 <input 
+                  type="checkbox" 
+                  checked={!!checkedItems[item.id]} 
+                  onChange={() => handleToggle(item.id)}
+                  className="peer h-5 w-5 opacity-0 absolute cursor-pointer z-10"
+                />
+                <div className="h-5 w-5 border-2 border-slate-200 rounded peer-checked:bg-indigo-500 peer-checked:border-indigo-500 transition-all flex items-center justify-center text-white text-[10px]">
+                  {!!checkedItems[item.id] && "✓"}
+                </div>
+              </div>
+              
+              <a 
+                href={`#${item.id}`} 
+                className={`text-[13px] leading-tight transition-all flex-1 ${
+                  checkedItems[item.id] ? 'text-slate-300 line-through italic' : 'text-slate-700 font-medium hover:text-indigo-600'
+                }`}
+              >
+                <span className="text-[10px] font-mono opacity-30 block mb-0.5">STEP {(i + 1).toString().padStart(2, '0')}</span>
+                {item.title}
+              </a>
+            </li>
           ))}
         </ol>
       </nav>
+      
+      {/* Visual Footer fade to show there is more to scroll */}
+      <div className="h-4 bg-gradient-to-t from-white to-transparent pointer-events-none rounded-bl-2xl" />
     </aside>
   );
 }

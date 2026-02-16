@@ -515,21 +515,23 @@ We can achieve a pixelation effect by sampling the color of the scene at fewer p
   let pixelateShader;
 
   function pixelateCallback() {
-    getColor((inputs, canvasContent) => {
-      let coord = inputs.texCoord;
-      return [coord, 0, 1];
-    });
+    filterColor.begin();  
+    let coord = filterColor.texCoord;
+                   //r, g,  b, a
+    filterColor.set([coord, 0, 1]);
+    filterColor.end();
   }
-
+  
   async function setup() {
-    createCanvas(200, 200);
+    createCanvas(200, 200, WEBGL);
     pixelDensity(1);
-    pixelateShader = baseFilterShader().modify(pixelateCallback)
+    pixelateShader = buildFilterShader(pixelateCallback);
   }
-
+  
   function draw() {
     filter(pixelateShader);
   }
+  
 `}/>
 
 The top left corner of the screen is now black, as it has a value of `(0, 0)` in texture coordinates. Down in the bottom left, it's green, showing that the texture coordinates are `(0, 1)`, and there is red in the top right with a value of `(1, 0)`.

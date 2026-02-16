@@ -397,22 +397,22 @@ This perspective makes it easier to determine how surfaces appear to the viewer:
 
 ```js
   function fresnelCallback() {
-    getCameraInputs((inputs) => {
-      // The normal vector on the sphere's surface
-      let normalVector = normalize(inputs.normal);
-      // This creates a vector pointing from the surface to the camera
-      let viewVector = normalize(-inputs.position);
-      // ...
-      return inputs;
-    })
+    
+    cameraInputs.begin();
+    // The normal vector on the sphere's surface
+    let normalVector = normalize(cameraInputs.normal);
+    // This creates a vector pointing from the surface to the camera
+    let viewVector = normalize(-cameraInputs.position);
+    // ...
+    cameraInputs.end();
   }
 ```
 
-The line let viewVector = normalize(-inputs.position) might seem counterintuitive, so let's break it down:
+The line `let viewVector = normalize(-cameraInputs.position)` might seem counterintuitive, so let's break it down:
 
 1. In camera space, the camera is at `(0, 0, 0)`
-2. inputs.position gives us the position of the current vertex being processed
-3. When we negate this (`-inputs.position`), we get a vector pointing from the vertex toward the camera
+2. cameraInputs.position gives us the position of the current vertex being processed
+3. When we negate this (`-cameraInputs.position`), we get a vector pointing from the vertex toward the camera
 4. `normalize()` converts this to a unit vector (where every component is between 0 - 1), making it useful for direction calculations regardless of distance
 
 #### Calculating the Fresnel factor
@@ -438,48 +438,55 @@ We raise this value to a power with `pow(base, 2)` to make the transition more d
 
 #### Applying the effect to the color
 ```js
-  let col = mix([0, 0, 0], [1, 0.5, 0.7], fresnel);
-inputs.color = [col, 1];
+  let col = mix([0, 0, 0], 
+                [1, 0.5, 0.7], 
+                fresnel);
+  cameraInputs.color = [col, 1];
 ```
 
 The `mix()` function in GLSL is similar to p5.js's lerp function. The color should now interpolate between `[0, 0, 0]` (black) when the object faces the camera, and the value of `fresnel` is close to 0, to a pinkish color `[1, 0.5, 0.7]` at its edges when `fresnel` is closer to one.
 
-As a note, `getCameraInputs` is inside of the **vertex shader**, which is usually where we will do calculations which rely on the position of vertices. Therefore, we are setting the **vertex color** at this point. The fragment shader will interpolate between vertices to make sure that the pixels between them look continuous.
+As a note, `cameraInputs` is a means of making changes inside of the **vertex shader**, which is usually where we will do calculations which rely on the position of vertices. Therefore, we are setting the **vertex color** at this point. The fragment shader will interpolate between vertices to make sure that the pixels between them look continuous.
 
 Notice the returned value above: `[col, 1]`. This is one of the ways in which vectors are prioritised as the main data type in shader languages, including p5.strands. We are able to construct a 4-component vector (`RGBA`) from a 3-component vector(`RGB`) plus a float (alpha). This is a hallmark of shader languages.
 
 <EditableSketch code={`
-  let fresnelShader
+  let fresnelShader;
 
   function fresnelCallback() {
     const fresnelPower = uniformFloat(2);
     const fresnelBias = uniformFloat(-0.1);
     const fresnelScale = uniformFloat(4);
   
-    getCameraInputs((inputs) => {
-      let n = normalize(inputs.normal);
-      let v = normalize(-inputs.position);
-      let base = 1.0 - dot(n, v);
-      let fresnel = fresnelScale * pow(base, fresnelPower) + fresnelBias;
-      let col = mix([0, 0, 0], [1, .5, .7], fresnel);
-      inputs.color = [col, 1];
-      return inputs;
-    });
+    cameraInputs.begin();
+    
+    let n = normalize(cameraInputs.normal);
+    let v = normalize(-cameraInputs.position);
+    let base = 1.0 - dot(n, v);
+    let fresnel = fresnelScale * 
+        pow(base, fresnelPower) + fresnelBias;
+    let col = mix([0, 0, 0], 
+                  [1, 0.5, 0.7], 
+                  fresnel);
+    cameraInputs.color = [col, 1];
+    
+    cameraInputs.end();
   }
-
+  
   async function setup() {
     createCanvas(400, 400, WEBGL);
     pixelDensity(1);
-    fresnelShader = baseColorShader().modify(fresnelCallback);
+    fresnelShader = buildColorShader(fresnelCallback);
   }
-
+  
   function draw() {
     background(0);
     noStroke();
     orbitControl();
-    shader(fresnelShader)
+    shader(fresnelShader);
     sphere(80);
-  } 
+  }
+  
 `} />
 
 
@@ -499,10 +506,10 @@ Uniforms can be changed without reloading the sketch if you use `setUniform()` o
 ## Post-processing
 Filter shaders are built in much the same way as any other shader in p5.strands. The only difference is that we are only concerned with the fragment shader in filters, the one which decides the color of what's on the screen. They work by taking a snapshot of the sketch every frame, and sending through a fragment shader to manipulate the color. There are effects which are only possible through post-processing in this way. 
 
-For the `baseFilterShader()` there is only one hook available, `getColor(inputs, canvasContent)`. Inputs contains `texCoord`, `canvasSize`, and `texelSize`. The other parameter, `canvasContent` is the snapshot of the sketch mentioned above.
+For the filter shader built with `buildFilterShader()` there is only one hook block available, `filterColor`. This makes available these properties: `texCoord`, `canvasSize`, `texelSize`, and `canvasContent` - the snapshot of the sketch mentioned above, and its set() method allows us to set the color of the pixel being prepared.
 
 ### Pixelating effect
-We can achieve a pixelation effect by sampling the color of the scene at fewer points than there are real pixels. If you are not familiar with texture coordinates, also known as UV coordinates, try returning `[inputs.texCoord, 0, 1]` at the end of the `getColor` function.
+We can achieve a pixelation effect by sampling the color of the scene at fewer points than there are real pixels. If you are not familiar with texture coordinates, also known as UV coordinates, try setting `filterColor.set([filterColor.texCoord, 0, 1])` - this will expand to a 4-element vector, using the x and y of texCoord as red and green values, respectively, setting blue to 0, and setting alpha (opacity) to 1.
 
 <EditableSketch code={`
   let pixelateShader;

@@ -1,77 +1,130 @@
 import { useEffect, useState } from 'preact/hooks';
 
+interface TOCItem {
+  id: string;
+  title: string;
+}
+
+// --- PURE UTILS: Separating the Scraper ---
+const getSketchTitle = (editor: HTMLElement, fallbackIndex: number): string => {
+  const code = editor.innerText || "";
+  const lines = code.split(/\r?\n/);
+  
+  const firstComment = lines
+    .map(line => line.match(/\/\/\s*(.+)/)?.[1]?.trim())
+    .find(content => !!content && !content.startsWith('http'));
+
+  return firstComment || `Sketch ${fallbackIndex + 1}`;
+};
+
+// --- SUB-COMPONENT: UI Item Logic ---
+interface ItemProps {
+  item: TOCItem;
+  index: number;
+  isChecked: boolean;
+  onToggle: (id: string) => void;
+}
+
+const TOCEntry = ({ item, index, isChecked, onToggle }: ItemProps) => (
+  <li className="flex items-start gap-3 group">
+    <input 
+      type="checkbox" 
+      checked={isChecked} 
+      onChange={() => onToggle(item.id)}
+      className="mt-1 h-3.5 w-3.5 accent-indigo-600 cursor-pointer shadow-sm"
+    />
+    <a 
+      href={`#${item.id}`} 
+      className={`text-xs leading-snug transition-all ${
+        isChecked 
+          ? 'text-slate-400 line-through italic' 
+          : 'text-indigo-600 font-medium hover:text-indigo-800'
+      }`}
+    >
+      <span className="text-[10px] font-mono opacity-40 mr-1">{(index + 1).toString().padStart(2, '0')}</span>
+      {item.title}
+    </a>
+  </li>
+);
+
+// --- MAIN COMPONENT ---
 export default function DynamicToC() {
-  const [items, setItems] = useState<{id: string, title: string}[]>([]);
+  const [items, setItems] = useState<TOCItem[]>([]);
+  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    const syncToC = () => {
-      const islands = Array.from(document.querySelectorAll('astro-island'));
-      
-      const nextItems = islands
-        .map((island, idx) => {
-          //.cm-content: codemirror content
-          const editor = island.querySelector('.cm-content') as HTMLElement;
-          const container = island.querySelector('.my-md') as HTMLElement;
-          
-          if (!editor || !container) return null;
+    // Persistence initialization
+    const saved = localStorage.getItem('toc-progress');
+    if (saved) setCheckedItems(JSON.parse(saved));
 
-          // Ensure the target has an ID for the anchor link
-          const id = container.id || `sketch-${idx}`;
-          if (container.id !== id) container.id = id;
+    const scan = () => {
+      const islands = document.querySelectorAll('astro-island');
+      const found: TOCItem[] = [];
+      let count = 0;
 
-          return { id, title: extractTitleFromCode(editor, idx) };
-        })
-        .filter((item) => !!item);
+      islands.forEach((island) => {
+        const editor = island.querySelector('.cm-content') as HTMLElement;
+        if (!editor) return;
 
-      // Deep compare to prevent unnecessary Preact re-renders
-      setItems(prev => JSON.stringify(prev) === JSON.stringify(nextItems) ? prev : nextItems);
+        const id = `sketch-${count}`; // Positional ID for localstorage stability
+        const container = island.querySelector('.my-md') as HTMLElement;
+        if (container && container.id !== id) container.id = id;
+
+        found.push({
+          id,
+          title: getSketchTitle(editor, count)
+        });
+        count++;
+      });
+
+      setItems(prev => JSON.stringify(prev) === JSON.stringify(found) ? prev : found);
     };
 
-    // Use a ResizeObserver or MutationObserver to catch hydration
-    const observer = new MutationObserver(syncToC);
+    const timer = setTimeout(scan, 200);
+    const observer = new MutationObserver(scan);
     observer.observe(document.body, { childList: true, subtree: true });
-    
-    syncToC(); // Initial run
-    return () => observer.disconnect();
+
+    return () => {
+      clearTimeout(timer);
+      observer.disconnect();
+    };
   }, []);
+
+  const handleToggle = (id: string) => {
+    const next = { ...checkedItems, [id]: !checkedItems[id] };
+    setCheckedItems(next);
+    localStorage.setItem('toc-progress', JSON.stringify(next));
+  };
 
   if (items.length === 0) return null;
 
+  const completedCount = Object.values(checkedItems).filter(Boolean).length;
+
   return (
-    <aside className="fixed right-0 top-1/4 w-64 z-[9999] bg-white border border-slate-200 shadow-lg rounded-l-lg p-4 font-sans">
-      <header className="border-b border-slate-100 pb-2 mb-3">
-        <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Outline</h2>
+    <aside className="fixed right-0 top-1/4 w-64 z-[9999] bg-white/90 backdrop-blur border border-slate-200 shadow-xl rounded-l-2xl p-5 font-sans">
+      <header className="border-b border-slate-100 pb-3 mb-4 flex justify-between items-end">
+        <div>
+          <h2 className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">Tutorial Progress</h2>
+          <p className="text-[9px] text-slate-300 font-medium mt-0.5 italic">Positional Tracking Active</p>
+        </div>
+        <span className="text-xs font-mono font-bold text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded">
+          {completedCount}/{items.length}
+        </span>
       </header>
+
       <nav>
-        <ol className="space-y-3">
+        <ol className="space-y-4">
           {items.map((item, i) => (
-            <TOCLink key={item.id} number={i + 1} item={item} />
+            <TOCEntry 
+              key={item.id} 
+              item={item} 
+              index={i} 
+              isChecked={!!checkedItems[item.id]} 
+              onToggle={handleToggle}
+            />
           ))}
         </ol>
       </nav>
     </aside>
   );
-}
-
-// Sub-component for better readability
-function TOCLink({ number, item }: { number: number, item: {id: string, title: string} }) {
-  return (
-    <li className="text-sm group">
-      <a href={`#${item.id}`} className="flex items-start gap-2 text-indigo-600 hover:text-indigo-800 transition-colors">
-        <span className="text-slate-300 font-mono text-[10px] pt-0.5">{number}.</span>
-        <span className="hover:underline decoration-indigo-200 underline-offset-4">{item.title}</span>
-      </a>
-    </li>
-  );
-}
-
-function extractTitleFromCode(editor: HTMLElement, index: number): string {
-  const code = editor.innerText || "";
-  const lines = code.split(/\r?\n/);
-  
-  const firstComment = lines
-    .map(l => l.match(/\/\/\s*(.+)/)?.[1]?.trim())
-    .find(c => !!c && !c.startsWith('http'));
-
-  return firstComment || `Sketch ${index + 1}`;
 }

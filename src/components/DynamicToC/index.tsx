@@ -49,25 +49,30 @@ export default function DynamicToC() {
     localStorage.setItem('toc-progress', JSON.stringify(next));
   };
 
+  const handleClear = () => {
+    setCheckedItems({});
+    localStorage.removeItem('toc-progress');
+  };
+
   if (items.length === 0) return null;
 
   return (
-    <aside className="fixed right-0 top-[20%] w-72 z-[9999] bg-white border border-slate-200 shadow-xl rounded-l-xl p-5 font-sans overflow-y-auto max-h-[70vh]">
+    <aside className="fixed right-0 top-[20%] w-72 z-[9999] bg-white border border-slate-200 shadow-xl rounded-l-xl p-5 font-sans overflow-y-auto max-h-[75vh]">
       <ol className="space-y-4">
-        {/* The "Clear All" button - structured exactly like a ToC item */}
+        {/* Clear Progress Row */}
         <li className="flex items-center gap-3 pb-4 mb-2 border-b border-slate-100">
           <button 
-            onClick={() => confirm('Clear all?') && (setCheckedItems({}), localStorage.removeItem('toc-progress'))}
-            className="h-4 w-4 rounded bg-rose-100 text-rose-600 flex items-center justify-center text-[10px] font-bold shrink-0"
+            onClick={handleClear}
+            className="h-5 w-5 rounded bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white flex items-center justify-center text-xs font-bold shrink-0 transition-colors border border-rose-100"
           >
             ×
           </button>
           <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-            Clear Progress ({Object.values(checkedItems).filter(Boolean).length}/{items.length})
+            Clear ({Object.values(checkedItems).filter(Boolean).length}/{items.length})
           </span>
         </li>
 
-        {/* The actual checklist */}
+        {/* List items */}
         {items.map((item, i) => (
           <li key={item.id} className="flex items-center gap-3">
             <input 
@@ -78,7 +83,7 @@ export default function DynamicToC() {
             />
             <a 
               href={`#${item.id}`} 
-              className={`text-[13px] leading-tight ${
+              className={`text-[13px] leading-tight flex-1 ${
                 checkedItems[item.id] ? 'text-slate-300 line-through italic' : 'text-slate-700 font-medium'
               }`}
             >

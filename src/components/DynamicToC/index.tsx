@@ -10,62 +10,64 @@ export default function DynamicToC() {
 
   useEffect(() => {
     const scan = () => {
-      // 1. Target the islands. Astro renders these in the exact order 
-      // they appear in your MDX file. This solves the ordering issue.
       const islands = document.querySelectorAll('astro-island');
-      
       const found: TOCItem[] = [];
+      let sketchCount = 0;
 
-      islands.forEach((island, index) => {
-        // Only process islands that contain our CodeEmbed/Editor
+      islands.forEach((island) => {
         const editor = island.querySelector('.cm-content') as HTMLElement;
         if (!editor) return;
 
+        sketchCount++;
         const container = island.querySelector('.my-md') as HTMLElement;
-        const id = container?.id || `sketch-step-${index}`;
+        const id = container?.id || `sketch-step-${sketchCount}`;
         if (container && !container.id) container.id = id;
 
-        // 2. Improved Scraper: Get all text and look for the first // comment
         const code = editor.innerText || "";
         
-        // 'g' flag with exec lets us find the first one regardless of line position
-        const commentRegex = /\/\/\s*([^\n\r]+)/g;
-        const match = commentRegex.exec(code);
-        
-        let title = `Sketch ${index + 1}`;
-        if (match && match[1]) {
-          const content = match[1].trim();
-          // Skip URLs (like p5.js includes)
-          if (!content.startsWith('http')) {
-            title = content;
-          } else {
-            // If the first comment was a URL, try to find a second one
-            const secondMatch = commentRegex.exec(code);
-            if (secondMatch && secondMatch[1]) {
-              title = secondMatch[1].trim();
-            }
-          }
-        }
+        // 1. Split into lines and find all comments
+        // This is more stable than a global regex loop
+        const lines = code.split(/\r?\n/);
+        const allComments = lines
+          .map(line => {
+            const match = line.match(/\/\/\s*(.+)/);
+            return match ? match[1].trim() : null;
+          })
+          .filter((c): c is string => !!c && !c.startsWith('http'));
+
+        // 2. Title is the first non-URL comment, or fallback
+        const title = allComments.length > 0 
+          ? allComments[0] 
+          : `Sketch ${sketchCount}`;
 
         found.push({ id, title });
       });
 
-      setItems(prev => (JSON.stringify(prev) === JSON.stringify(found) ? prev : found));
+      setItems(prev => {
+        const nextJSON = JSON.stringify(found);
+        if (JSON.stringify(prev) === nextJSON) return prev;
+        return found;
+      });
     };
 
-    scan();
+    // Initial delay to let CodeMirror populate
+    const timer = setTimeout(scan, 100);
+
     const observer = new MutationObserver(() => scan());
     observer.observe(document.body, { childList: true, subtree: true });
 
-    return () => observer.disconnect();
+    return () => {
+      clearTimeout(timer);
+      observer.disconnect();
+    };
   }, []);
 
   if (items.length === 0) return null;
 
   return (
-    <nav className="p-4 my-8 border-l-4 border-indigo-500 bg-slate-50 rounded">
+    <nav className="p-4 my-8 border-l-4 border-indigo-500 bg-slate-50 rounded shadow-sm">
       <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">
-        In this tutorial
+        Interactive Sketches
       </h2>
       <ol className="space-y-2 list-decimal list-inside">
         {items.map((item) => (

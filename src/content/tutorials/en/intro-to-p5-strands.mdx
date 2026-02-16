@@ -572,7 +572,7 @@ With that in mind, let's manipulate the number of texture coordinates, so that m
     filter(pixelateShader);
   }
 `}/>
-This is the entire code for our pixelating shader. Put this filter at the bottom of our draw function to pixelate the entire scene by calling `filter(pixelShader)`. We also need to use `baseFilterShader().modify(pixelateCallback)` to construct the shader as before.
+This is the entire code for our pixelating shader. Put this filter at the bottom of our draw function to pixelate the entire scene by calling `filter(pixelShader)`. We also need to use `buildFilterShader(pixelateCallback)` to construct the shader as before.
 
 ### Bloom
 In postprocessing, bloom is an effect which makes the brightest parts of an image bleed out and cause the surrounding pixels to light up. This produces the sense that light is emitting from parts of the scene, but without any expensive lighting calculations. 
@@ -590,7 +590,10 @@ We could write the shader to produce the blurred image, but p5.js already has pr
   }
 
   function draw() {
-    // Draw the previous code to a framebuffer, so that we can store it before our  blur is applied.
+    // Draw the previous code to a 
+    // framebuffer, so that we can 
+    // store it before our  blur is
+    //  applied.
     originalImage.begin();
     // previous code...
     originalImage.end(); 
@@ -609,16 +612,22 @@ We could write the shader to produce the blurred image, but p5.js already has pr
   function bloomCallback() {
     const ogImage = uniformTexture(() => originalImage)
   
-    getColor((input, canvasContent) => {
-      // Get our textures converted into vector values.
-      const blurred = getTexture(canvasContent, input.texCoord);
-      const original = getTexture(ogImage, input.texCoord);
-    
-      const intensity = max(original, 0.3) * 1.5;
-      // Overlay the blurred image
-      const bloom = original + blurred * intensity;
-      return [bloom.rgb, 1]
-    });
+    filterColor.begin();
+    // Get our textures converted into 
+    // vector values.
+    const blurred = 
+      getTexture(filterColor.canvasContent, 
+                 filterColor.texCoord);
+    const original = 
+      getTexture(ogImage, 
+                 filterColor.texCoord);
+  
+    const intensity = max(original, 0.3) *
+                          1.5;
+    // Overlay the blurred image
+    const bloom = original + blurred * intensity;
+    filterColor.set([bloom.rgb, 1]);
+    filterColor.end();
   }
 ```
 
@@ -629,15 +638,17 @@ We could write the shader to produce the blurred image, but p5.js already has pr
   function bloomCallback() {
     const preBlur = uniformTexture(() => originalImage);
   
-    getColor((input, canvasContent) => {
-      const blurred = getTexture(canvasContent, input.texCoord);
-      const original = getTexture(preBlur, input.texCoord);
+    filterColor.begin();
+    const blurred = getTexture(filterColor.canvasContent,
+                               filterColor.texCoord);
+    const original = getTexture(preBlur, 
+                                filterColor.texCoord);
     
-      const intensity = max(original, 0.2) * 8;
+    const intensity = max(original, 0.2) * 8;
       
-      const bloom = original + blurred * intensity;
-      return [bloom.rgb, 1];
-    });
+    const bloom = original + blurred * intensity;
+    filterColor.set([bloom.rgb, 1]);
+    filterColor.end();
   }
 
 
@@ -645,7 +656,7 @@ We could write the shader to produce the blurred image, but p5.js already has pr
     createCanvas(200, 200, WEBGL);
     pixelDensity(1);
     originalImage = createFramebuffer();
-    bloomShader = baseFilterShader().modify(bloomCallback);
+    bloomShader = buildFilterShader(bloomCallback);
   }
 
   function draw() {
@@ -677,7 +688,7 @@ Try changing it to `.grg` or any other combination, for some last minute color c
 
 <Callout title="Hint">
 Try 'swizzling' the return value and writing something like 
-`inputs.color = [col.ggr, 1]`. 
+`filterColor.set([col.ggr, 1])`. 
 </ Callout>
 
 ## Review

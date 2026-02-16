@@ -15,7 +15,7 @@ const extractTitle = (code: string): string | null => {
 };
 
 const processIslands = (islands: Element[]): TOCItem[] => {
-  return islands
+  return Array.from(islands)
     .map((island, index) => {
       const editor = island.querySelector('.cm-content') as HTMLElement;
       const container = island.querySelector('.my-md') as HTMLElement;
@@ -51,7 +51,7 @@ const TOCEntry = ({
       type="checkbox" 
       checked={isChecked} 
       onChange={() => onToggle(item.id)}
-      className="mt-1 h-3.5 w-3.5 accent-indigo-600 cursor-pointer"
+      className="mt-1 h-3.5 w-3.5 accent-indigo-600 cursor-pointer shrink-0"
     />
     <a 
       href={`#${item.id}`} 
@@ -107,11 +107,13 @@ export default function DynamicToC() {
   if (items.length === 0) return null;
 
   const completedCount = Object.values(checkedItems).filter(Boolean).length;
+  const progressPercent = (completedCount / items.length) * 100;
 
   return (
-    <aside className="fixed right-0 top-1/4 w-64 z-[9999] bg-white border border-slate-200 shadow-xl rounded-l-2xl p-5 font-sans">
-      <header className="border-b border-slate-100 pb-3 mb-4">
-        <div className="flex justify-between items-center mb-2">
+    <aside className="fixed right-0 top-32 w-64 z-[9999] bg-white border-y border-l border-slate-200 shadow-xl rounded-l-2xl p-5 font-sans">
+      <header className="border-b border-slate-100 pb-3 mb-4 space-y-3">
+        {/* Top Row: Labels and Clear Button */}
+        <div className="flex justify-between items-start">
           <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Progress</h2>
           <button 
             onClick={clearAll}
@@ -120,19 +122,22 @@ export default function DynamicToC() {
             Clear All
           </button>
         </div>
-        <div className="flex justify-between items-center">
-          <span className="text-xs font-mono font-bold text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded">
+
+        {/* Bottom Row: Stats and Bar */}
+        <div className="flex items-center gap-3">
+          <span className="text-[10px] font-mono font-bold text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded shrink-0">
             {completedCount}/{items.length}
           </span>
-          <div className="flex-1 ml-3 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+          <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
             <div 
               className="h-full bg-indigo-400 transition-all duration-500" 
-              style={{ width: `${(completedCount / items.length) * 100}%` }}
+              style={{ width: `${progressPercent}%` }}
             />
           </div>
         </div>
       </header>
-      <nav className="max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
+
+      <nav className="max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
         <ol className="space-y-4">
           {items.map((item, i) => (
             <TOCEntry 

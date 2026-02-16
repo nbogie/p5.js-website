@@ -536,31 +536,33 @@ We can achieve a pixelation effect by sampling the color of the scene at fewer p
 
 The top left corner of the screen is now black, as it has a value of `(0, 0)` in texture coordinates. Down in the bottom left, it's green, showing that the texture coordinates are `(0, 1)`, and there is red in the top right with a value of `(1, 0)`.
 
-With that in mind, let's manipulate the number of texture coordinates, so that more pixels will sample their color from the same place on the original texture. We do this proportionally to `inputs.canvasSize` to get square pixels.
+With that in mind, let's manipulate the number of texture coordinates, so that more pixels will sample their color from the same place on the original texture. We do this proportionally to `filterColor.canvasSize` to get square pixels.
 
 <EditableSketch code={`
   let pixelateShader;
 
   function pixelateCallback() {
-    const pixelCountX = uniformFloat(() => 80);
+    const pixelCountX = 50;
   
-    getColor((inputs, canvasContent) => {
-      const aspectRatio = inputs.canvasSize.x / inputs.canvasSize.y;
-      const pixelSize = [pixelCountX, pixelCountX / aspectRatio];
-
-      // Sample the canvasContent texture with the modified texCoord
-      const coord = inputs.texCoord;
-      const modifiedCoord = floor(coord * pixelSize) / pixelSize;
-
-      const col = getTexture(canvasContent, modifiedCoord);
-      return col;
-    });
+    filterColor.begin();
+    const aspectRatio = filterColor.canvasSize.x /
+                        filterColor.canvasSize.y;
+    const pixelSize = [pixelCountX, pixelCountX / aspectRatio];
+    // Sample the canvasContent texture with the 
+    // modified texCoord
+    const coord = filterColor.texCoord;
+    const modifiedCoord = floor(coord * pixelSize) / 
+                          pixelSize;
+    const col = getTexture(filterColor.canvasContent,
+                           modifiedCoord);
+    filterColor.set(col);
+    filterColor.end();
   }
 
   async function setup() {
     createCanvas(200, 200, WEBGL);
     pixelDensity(1);
-    pixelateShader = baseFilterShader().modify(pixelateCallback)
+    pixelateShader = buildFilterShader(pixelateCallback)
   }
 
   function draw() {

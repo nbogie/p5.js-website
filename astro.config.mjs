@@ -18,7 +18,8 @@ if (shouldSkipCompress) {
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://p5js.org',
+  site: 'https://nbogie.github.io',
+  base: '/p5.js-website/',
   compressHTML: false,
   legacy: {
     collections: true

@@ -1,45 +1,51 @@
 ---
 import Layout from "../layouts/BaseLayout.astro";
 
-/**
- * Returns the last (non-empty) segment from the slash-separated path, or ""
- *
- * Discards any hash part of the URL before splitting it.
- * 
- * @param path string to extract the last part of
- * @returns the last non-empty segment or an empty string
- *
- * @example
- * An input of `/reference/p5/basematerialshader/` will return `basematerialshader`
- * An input of `/reference/p5.Vector/dist/#Examples` will return `dist`
- */
-function getLastPathElementOrEmptyString(path: string): string {
-  //Get the part of the path before the (first) hash
-  const preHashPath = path.split("#")[0] ?? "";
-  //Then get the last non-empty slash-separated segment from that
-  return preHashPath.split("/").filter(Boolean).pop() ?? "";
-}
-
 const currentPath = Astro.url.pathname;
-const finalTerm = getLastPathElementOrEmptyString(currentPath);
+const finalTerm = "";
 ---
 
 <Layout title="404: Page Not Found">
     <main class="flex flex-col items-start gap-8 py-8 px-2 prose max-w-none">
         <p>
             Sorry, we couldn't find your exact page
-            <code>{currentPath}</code>.
+            <code id="display-path">{currentPath}</code>.
 
             <div class="flex flex-col gap-4">
                 <a
-                    href={`https://beta.p5js.org/search/?term=${finalTerm}`}
+                    id="search-link"
+                    href="/search/"
                     class="btn"
                 >
-                    Search here for <code>{finalTerm}</code>
+                    Search here for <code id="display-search-term">{finalTerm}</code>
                 </a>
                 or
                 <a href="/" class="btn secondary">go home</a>
             </div>
         </p>
     </main>
+    <script is:inline>
+          (function update404PageDetails() {
+            /**
+             * Extracts the last meaningful segment from the current URL path.
+             */
+            function getLastSegment(path) {
+              return path.split('/').filter(Boolean).pop() ?? "";
+            }
+
+            //(pathname already strips away any hash part)
+            const realPath = window.location.pathname;
+            const term = getLastSegment(realPath);
+
+            const displayPath = document.getElementById('display-path');
+            const searchLink = document.getElementById('search-link');
+            const searchTerm = document.getElementById('display-search-term');
+
+            if (displayPath) {displayPath.textContent = realPath;}
+            if (searchTerm) {searchTerm.textContent = term;}
+            if (searchLink) {
+                searchLink.href = `/search/?term=${encodeURIComponent(term)}`;
+            }
+          })();
+        </script>
 </Layout>

@@ -1,17 +1,11 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "p5-js-website",
+  "name": "p5web-sass-fix",
   "compatibility_date": "2026-03-12",
   "workers_dev": true,
   "observability": {
     "enabled": true
   },
-  "routes": [
-    {
-     	"pattern": "p5js.org",
-     	"custom_domain": true
-    }
-  ],
   "compatibility_flags": [
     "global_fetch_strictly_public",
     "nodejs_compat"
@@ -21,13 +15,6 @@
     "not_found_handling": "404-page"
   },
   "env": {
-    "beta": {
-      "routes": [
-        {
-         	"pattern": "beta.p5js.org",
-         	"custom_domain": true
-        }
-      ]
-    }
+    "beta": {}
   }
 }
